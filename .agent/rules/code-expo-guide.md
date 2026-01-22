@@ -4,8 +4,6 @@ trigger: always_on
 
 # Expo Best Practices & Development Rules
 
-These rules are based on Zafer Ayan's "Expo Best Practices" guide to ensure performance, scalability, and maintainability in Expo projects.
-
 ## 1. Architecture and Navigation
 
 - **Expo Router:** Use file-based `Expo Router` for navigation.
