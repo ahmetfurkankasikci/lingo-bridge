@@ -5,20 +5,10 @@ import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import type { WordCard } from '@/types';
+
 // Initialize MMKV for high-performance local storage
 export const storage = createMMKV();
-
-// WordCard represents a single vocabulary entry with AI-generated content
-export interface WordCard {
-  id: string; // Unique identifier
-  word: string; // English word to learn
-  meaningTr: string; // Turkish translation
-  context: string; // Daily-life scenario (e.g., "Ordering Coffee", "Airport")
-  exampleSentence: string; // AI-generated sentence using the word in context
-  createdAt: number; // Timestamp when word was added
-  lastContextUpdate: number; // Timestamp of last context refresh (for weekly evolution)
-  masteryLevel: number; // User's proficiency: 0 (New) to 5 (Mastered)
-}
 
 // Store interface defining state and actions
 interface VocabState {

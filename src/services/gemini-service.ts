@@ -1,12 +1,14 @@
-import { Config } from '@/constants/config';
+// Phase 2: Gemini Service for AI-powered vocabulary generation
+// Handles API communication with Google Gemini 2.5 Flash
 
-/**
- * Example service demonstrating how to use the Gemini API key.
- * This is a template - implement your actual Gemini API logic here.
- */
+import { Config } from '@/constants/config';
+import { createWordCardPrompt } from '@/constants/prompts';
+import { getRandomScenario } from '@/constants/scenarios';
+import type { WordCardContent } from '@/types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
+// Response structure from Gemini API
 interface GeminiResponse {
   candidates?: {
     content: {
@@ -62,6 +64,43 @@ class GeminiService {
     }
 
     return text;
+  }
+
+  /**
+   * Phase 2: Generate a vocabulary card with Turkish meaning and daily-life context.
+   * Uses strict prompting to ensure sentences are from real-world scenarios.
+   * @param word - The English word to learn
+   * @returns WordCardContent with Turkish meaning, context, and example sentence
+   */
+  async generateWordCard(word: string): Promise<WordCardContent> {
+    // Get a random daily-life scenario for variety
+    const scenario = getRandomScenario();
+
+    // Generate the prompt using the template
+    const prompt = createWordCardPrompt(word, scenario);
+
+    // Call Gemini API
+    const responseText = await this.generateContent(prompt);
+
+    // Parse JSON response (remove any markdown formatting if present)
+    const cleanedResponse = responseText
+      .replace(/```json\n?/g, '') // Remove ```json
+      .replace(/```\n?/g, '') // Remove ```
+      .trim();
+
+    try {
+      const parsed: WordCardContent = JSON.parse(cleanedResponse);
+
+      // Validate required fields
+      if (!parsed.meaningTr || !parsed.context || !parsed.exampleSentence) {
+        throw new Error('Missing required fields in Gemini response');
+      }
+
+      return parsed;
+    } catch (error) {
+      console.error('Failed to parse Gemini response:', cleanedResponse, error);
+      throw new Error('Invalid response format from Gemini API');
+    }
   }
 }
 
