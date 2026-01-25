@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "learn-english",
-    "slug": "learn-english",
+    "name": "Lingo Bridge",
+    "slug": "lingo-bridge",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "learnenglish",
+    "scheme": "lingobridge",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.kashichi.learnenglish"
+      "package": "com.kashichi.lingobridge"
     },
     "web": {
       "output": "static",
