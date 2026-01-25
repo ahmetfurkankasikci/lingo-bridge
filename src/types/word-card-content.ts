@@ -3,6 +3,5 @@
 
 export interface WordCardContent {
   meaningTr: string; // Turkish translation of the word
-  context: string; // Daily-life scenario (e.g., "ordering food at a restaurant")
-  exampleSentence: string; // Example sentence using the word in context
+  exampleSentence: string; // B1-level example sentence with conjunction
 }

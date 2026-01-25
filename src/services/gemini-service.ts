@@ -3,7 +3,6 @@
 
 import { Config } from '@/constants/config';
 import { createWordCardPrompt } from '@/constants/prompts';
-import { getRandomScenario } from '@/constants/scenarios';
 import type { WordCardContent } from '@/types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
@@ -67,17 +66,14 @@ class GeminiService {
   }
 
   /**
-   * Phase 2: Generate a vocabulary card with Turkish meaning and daily-life context.
-   * Uses strict prompting to ensure sentences are from real-world scenarios.
+   * Generate a vocabulary card with Turkish meaning and B1-level example sentence.
+   * Sentences are 10-20 words with at least one conjunction for B1 complexity.
    * @param word - The English word to learn
-   * @returns WordCardContent with Turkish meaning, context, and example sentence
+   * @returns WordCardContent with Turkish meaning and example sentence
    */
   async generateWordCard(word: string): Promise<WordCardContent> {
-    // Get a random daily-life scenario for variety
-    const scenario = getRandomScenario();
-
-    // Generate the prompt using the template
-    const prompt = createWordCardPrompt(word, scenario);
+    // Generate the prompt
+    const prompt = createWordCardPrompt(word);
 
     // Call Gemini API
     const responseText = await this.generateContent(prompt);
@@ -92,7 +88,7 @@ class GeminiService {
       const parsed: WordCardContent = JSON.parse(cleanedResponse);
 
       // Validate required fields
-      if (!parsed.meaningTr || !parsed.context || !parsed.exampleSentence) {
+      if (!parsed.meaningTr || !parsed.exampleSentence) {
         throw new Error('Missing required fields in Gemini response');
       }
 

@@ -4,11 +4,11 @@
 import * as Haptics from 'expo-haptics';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
-    Easing,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import type { WordCard as WordCardType } from '@/types';
@@ -83,13 +83,6 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           <Text className="text-3xl font-bold text-gray-900 text-center">
             {card.word}
           </Text>
-
-          {/* Context Badge */}
-          <View className="mt-4 bg-blue-50 px-3 py-1 rounded-full">
-            <Text className="text-xs text-blue-600 font-medium">
-              {card.content.context}
-            </Text>
-          </View>
 
           {/* Flip Hint */}
           <Text className="absolute bottom-3 text-xs text-gray-400">
