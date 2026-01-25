@@ -1,50 +1,124 @@
-# Welcome to your Expo app 👋
+# Lingo Bridge 🌉
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An AI-powered English learning app designed to help Turkish speakers bridge the gap from A2 to B1 proficiency through practical, daily-life vocabulary.
 
-## Get started
+## ✨ Features
 
-1. Install dependencies
+### 📚 Dynamic Word Cards
 
-   ```bash
-   npm install
-   ```
+- Add any English word and get AI-generated Turkish translations
+- Example sentences are B1-level (10-20 words with conjunctions)
+- Target words are **highlighted** in sentences for easy recognition
+- Beautiful flip animation to reveal meanings
 
-2. Start the app
+### 🔄 Context Refresh
 
-   ```bash
-   npx expo start
-   ```
+- Manually refresh example sentences with a tap
+- Get fresh, varied contexts for the same word
+- Prevents rote memorization
 
-In the output, you'll find options to open the app in a
+### 🎯 Mastery Tracking
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Visual mastery level indicator (0-5)
+- Track your progress for each word
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠️ Tech Stack
 
-## Get a fresh project
+| Category   | Technology                 |
+| ---------- | -------------------------- |
+| Framework  | Expo SDK 54, React Native  |
+| Navigation | Expo Router (file-based)   |
+| State      | Zustand + MMKV persistence |
+| API Calls  | TanStack Query             |
+| AI         | Google Gemini 2.5 Flash    |
+| Styling    | NativeWind (Tailwind CSS)  |
+| Animations | React Native Reanimated    |
+| Icons      | Lucide React Native        |
 
-When you're ready, run:
+## 📁 Project Structure
 
-```bash
-npm run reset-project
+```
+lingo-bridge/
+├── app/                    # Expo Router pages
+│   ├── (tabs)/            # Tab navigation
+│   │   ├── index.tsx      # Home - vocabulary list
+│   │   ├── bridge.tsx     # B1 Bridge (coming soon)
+│   │   └── practice.tsx   # Practice mode (coming soon)
+│   └── _layout.tsx        # Root layout with providers
+├── src/
+│   ├── components/        # Reusable UI components
+│   │   ├── word-card.tsx  # Flip card with refresh
+│   │   └── add-word-modal.tsx
+│   ├── hooks/             # Custom React hooks
+│   │   └── use-context-refresh.ts
+│   ├── services/          # API services
+│   │   └── gemini-service.ts
+│   ├── store/             # Zustand stores
+│   │   └── vocab-store.ts
+│   ├── constants/         # App constants
+│   │   ├── prompts.ts     # AI prompt templates
+│   │   └── config.ts      # Environment config
+│   └── types/             # TypeScript types
+└── .env                   # Environment variables
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🚀 Getting Started
 
-## Learn more
+### Prerequisites
 
-To learn more about developing your project with Expo, look at the following resources:
+- Node.js 18+
+- Expo CLI
+- Android Studio / Xcode (for native builds)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### Installation
 
-## Join the community
+```bash
+# Clone the repository
+git clone <repo-url>
+cd lingo-bridge
 
-Join our community of developers creating universal apps.
+# Install dependencies
+npm install
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Set up environment variables
+cp .env.example .env
+# Add your Gemini API key to .env
+```
+
+### Environment Variables
+
+```env
+EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+### Running the App
+
+```bash
+# Start development server
+npm start
+
+# Run on Android
+npm run android
+
+# Run on iOS
+npm run ios
+```
+
+## 📱 Usage
+
+1. **Add a Word**: Tap the + button on the home screen
+2. **View Cards**: Tap a card to flip and see the example sentence
+3. **Refresh Context**: Tap the 🔄 icon to get a new example sentence
+4. **Track Progress**: Watch your mastery dots fill up as you learn
+
+## 🗺️ Roadmap
+
+- [x] Phase 1: Foundation & Architecture
+- [x] Phase 2: Dynamic Word Cards
+- [x] Phase 3: Context Refresh
+- [ ] Phase 4: B1 Bridge (A2 → B1 transformation)
+- [ ] Phase 5: Interactive Practice Mode
+
+## 📄 License
+
+MIT
