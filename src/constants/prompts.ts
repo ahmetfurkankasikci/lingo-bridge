@@ -33,3 +33,31 @@ CRITICAL: Respond ONLY with valid JSON in this exact format (no markdown, no cod
   "exampleSentence": "Your example sentence with **target word** wrapped in asterisks"
 }`;
 };
+
+/**
+ * Generates a prompt for regenerating ONLY the example sentence
+ * Used for weekly context evolution - keeps same Turkish meaning
+ * @param word - The English word
+ * @param meaningTr - The existing Turkish translation to preserve
+ * @returns Formatted prompt string for Gemini API
+ */
+export const createRegeneratePrompt = (word: string, meaningTr: string): string => {
+  return `You are an English teacher helping Turkish students learn practical vocabulary.
+
+Word: "${word}"
+Turkish meaning (keep this unchanged): "${meaningTr}"
+
+Task:
+Generate a NEW and DIFFERENT example sentence using "${word}" (or its conjugated form) that follows these rules:
+- Strictly between 10 to 20 words
+- Use at least one conjunction (and, but, so, because, although)
+- B1 level complexity (clear but not too simple)
+- Grounded in daily life situations
+- Make it DIFFERENT from any previous sentence - use a new scenario
+- Wrap the target word with double asterisks like **word** for highlighting
+
+CRITICAL: Respond ONLY with valid JSON in this exact format (no markdown, no code blocks):
+{
+  "exampleSentence": "Your NEW example sentence with **target word** wrapped in asterisks"
+}`;
+};

@@ -2,7 +2,7 @@
 // Handles API communication with Google Gemini 2.5 Flash
 
 import { Config } from '@/constants/config';
-import { createWordCardPrompt } from '@/constants/prompts';
+import { createRegeneratePrompt, createWordCardPrompt } from '@/constants/prompts';
 import type { WordCardContent } from '@/types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
@@ -95,6 +95,40 @@ class GeminiService {
       return parsed;
     } catch (error) {
       console.error('Failed to parse Gemini response:', cleanedResponse, error);
+      throw new Error('Invalid response format from Gemini API');
+    }
+  }
+
+  /**
+   * Phase 3: Regenerate ONLY the example sentence for weekly context evolution.
+   * Keeps the existing Turkish meaning but generates a fresh sentence.
+   * @param word - The English word
+   * @param meaningTr - The existing Turkish translation to preserve
+   * @returns New example sentence string
+   */
+  async regenerateWordContext(word: string, meaningTr: string): Promise<string> {
+    // Generate the regeneration prompt
+    const prompt = createRegeneratePrompt(word, meaningTr);
+
+    // Call Gemini API
+    const responseText = await this.generateContent(prompt);
+
+    // Parse JSON response
+    const cleanedResponse = responseText
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    try {
+      const parsed = JSON.parse(cleanedResponse) as { exampleSentence: string };
+
+      if (!parsed.exampleSentence) {
+        throw new Error('Missing exampleSentence in Gemini response');
+      }
+
+      return parsed.exampleSentence;
+    } catch (error) {
+      console.error('Failed to parse regeneration response:', cleanedResponse, error);
       throw new Error('Invalid response format from Gemini API');
     }
   }

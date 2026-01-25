@@ -1,8 +1,9 @@
 // Phase 2: Word Card component with flip animation
-// Features: Front shows Turkish meaning, back shows example with bolded English word
+// Features: Front shows Turkish meaning, back shows example with refresh button
 
 import * as Haptics from 'expo-haptics';
-import { Pressable, Text, View } from 'react-native';
+import { RefreshCw } from 'lucide-react-native';
+import { ActivityIndicator, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
   Easing,
   interpolate,
@@ -11,6 +12,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useRefreshContext } from '@/hooks/use-context-refresh';
 import type { WordCard as WordCardType } from '@/types';
 
 interface WordCardProps {
@@ -43,6 +45,9 @@ export function WordCard({ card, onDelete }: WordCardProps) {
   // Track which side is showing
   const isFlipped = useSharedValue(false);
 
+  // Manual refresh mutation
+  const refreshMutation = useRefreshContext();
+
   // Handle card flip with haptic feedback
   const handleFlip = async () => {
     // Haptic feedback on flip
@@ -56,6 +61,12 @@ export function WordCard({ card, onDelete }: WordCardProps) {
       duration: 400,
       easing: Easing.out(Easing.cubic),
     });
+  };
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    refreshMutation.mutate(card);
   };
 
   // Front side animation: visible when progress is 0-0.5, rotates 0-90deg
@@ -108,7 +119,7 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           </Text>
         </Animated.View>
 
-        {/* Back Side - Example Sentence with bolded English word */}
+        {/* Back Side - Example Sentence with refresh button */}
         <Animated.View
           style={[
             backAnimatedStyle,
@@ -116,6 +127,19 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           ]}
           className="absolute inset-0 rounded-2xl p-5 justify-center"
         >
+          {/* Refresh Button - Top Right */}
+          <TouchableOpacity
+            onPress={handleRefresh}
+            disabled={refreshMutation.isPending}
+            className="absolute top-3 right-3 p-2 bg-blue-600 rounded-full"
+          >
+            {refreshMutation.isPending ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <RefreshCw size={18} color="#fff" />
+            )}
+          </TouchableOpacity>
+
           {/* Label */}
           <Text className="text-xs text-blue-200 mb-3 text-center">Example Sentence</Text>
 
