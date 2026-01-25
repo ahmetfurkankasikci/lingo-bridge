@@ -1,14 +1,109 @@
-// Phase 1: Home Screen Placeholder
-// TODO Phase 2: Implement FlashList with WordCard components and Add Word FAB
+// Phase 2: Home Screen - Main vocabulary list
+// Features: FlashList for performance, FAB to add words, empty state, Zustand integration
 
-import { Text } from 'react-native';
+import { FlashList } from "@shopify/flash-list";
+import * as Haptics from 'expo-haptics';
+import { BookOpen, Plus } from 'lucide-react-native';
+import { useState } from 'react';
+import { StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AddWordModal } from '@/components/add-word-modal';
+import { WordCard } from '@/components/word-card';
+import { useVocabStore } from '@/store/vocab-store';
+import type { WordCard as WordCardType } from '@/types';
+
 export default function HomeScreen() {
+  // Modal visibility state
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Get words from Zustand store (auto-synced with MMKV)
+  const words = useVocabStore((state) => state.words);
+
+  // Handle FAB press with haptic feedback
+  const handleOpenModal = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setIsModalVisible(true);
+  };
+
+  // Render each word card item
+  const renderItem = ({ item }: { item: WordCardType }) => {
+    return <WordCard card={item} />;
+  };
+
+  // Empty state component when no words exist
+  const EmptyState = () => (
+    <View className="flex-1 items-center justify-center px-8">
+      {/* Icon */}
+      <View className="bg-blue-50 p-6 rounded-full mb-6">
+        <BookOpen size={48} color="#3B82F6" />
+      </View>
+
+      {/* Title */}
+      <Text className="text-2xl font-bold text-gray-900 text-center mb-2">
+        No words yet
+      </Text>
+
+      {/* Description */}
+      <Text className="text-gray-500 text-center text-base leading-relaxed">
+        Start building your vocabulary by adding your first English word. AI will
+        generate Turkish meanings and daily-life example sentences.
+      </Text>
+
+      {/* CTA Button */}
+      <TouchableOpacity
+        onPress={handleOpenModal}
+        className="mt-8 bg-blue-500 px-8 py-4 rounded-xl"
+        style={{ boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)' }}
+      >
+        <Text className="text-white font-semibold text-base">Add Your First Word</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <SafeAreaView className="flex-1 bg-white items-center justify-center">
-      <Text className="text-2xl font-bold">Lingo Bridge</Text>
-      <Text className="text-gray-500 mt-2">Your Daily Vocab</Text>
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+      <StatusBar barStyle="dark-content" />
+
+      {/* Header */}
+      <View className="px-5 py-4 border-b border-gray-100 bg-white">
+        <Text className="text-2xl font-bold text-gray-900">Lingo Bridge</Text>
+        <Text className="text-sm text-gray-500 mt-1">
+          {words.length > 0
+            ? `${words.length} word${words.length > 1 ? 's' : ''} in your vocabulary`
+            : 'Your daily vocabulary companion'}
+        </Text>
+      </View>
+
+      {/* Word List or Empty State */}
+      {words.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <FlashList
+          data={words}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {/* Floating Action Button - Only show when words exist */}
+      {words.length > 0 && (
+        <TouchableOpacity
+          onPress={handleOpenModal}
+          className="absolute bottom-6 right-6 bg-blue-500 w-16 h-16 rounded-full items-center justify-center"
+          style={{ boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
+        >
+          <Plus size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {/* Add Word Modal */}
+      <AddWordModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
