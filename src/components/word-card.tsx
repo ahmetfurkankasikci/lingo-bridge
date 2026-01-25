@@ -1,5 +1,5 @@
 // Phase 2: Word Card component with flip animation
-// Features: Front/back flip, Reanimated animation, haptic feedback, boxShadow styling
+// Features: Front shows Turkish meaning, back shows example with bolded English word
 
 import * as Haptics from 'expo-haptics';
 import { Pressable, Text, View } from 'react-native';
@@ -16,6 +16,24 @@ import type { WordCard as WordCardType } from '@/types';
 interface WordCardProps {
   card: WordCardType; // The vocabulary card data
   onDelete?: (id: string) => void; // Optional delete callback
+}
+
+// Helper to render sentence with **bold** markers parsed
+function renderSentenceWithBoldMarkers(sentence: string) {
+  // Split by ** markers: "I **drink** coffee" → ["I ", "drink", " coffee"]
+  const parts = sentence.split(/\*\*([^*]+)\*\*/g);
+
+  return parts.map((part, index) => {
+    // Odd indices are the words that were inside ** markers
+    if (index % 2 === 1) {
+      return (
+        <Text key={index} className="font-bold text-yellow-300">
+          {part}
+        </Text>
+      );
+    }
+    return <Text key={index}>{part}</Text>;
+  });
 }
 
 export function WordCard({ card, onDelete }: WordCardProps) {
@@ -68,7 +86,7 @@ export function WordCard({ card, onDelete }: WordCardProps) {
     <Pressable onPress={handleFlip} className="w-full mb-4">
       {/* Card Container - maintains consistent height */}
       <View className="relative h-48">
-        {/* Front Side - English Word */}
+        {/* Front Side - Turkish Meaning Only */}
         <Animated.View
           style={[
             frontAnimatedStyle,
@@ -76,49 +94,38 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           ]}
           className="absolute inset-0 bg-white rounded-2xl p-5 justify-center items-center"
         >
-          {/* Word Label */}
-          <Text className="text-sm text-gray-500 mb-2">English</Text>
+          {/* Label */}
+          <Text className="text-sm text-gray-500 mb-2">Türkçe</Text>
 
-          {/* The Word */}
+          {/* Turkish Meaning */}
           <Text className="text-3xl font-bold text-gray-900 text-center">
-            {card.word}
+            {card.content.meaningTr}
           </Text>
 
           {/* Flip Hint */}
           <Text className="absolute bottom-3 text-xs text-gray-400">
-            Tap to flip
+            Tap to see example
           </Text>
         </Animated.View>
 
-        {/* Back Side - Turkish Meaning & Example */}
+        {/* Back Side - Example Sentence with bolded English word */}
         <Animated.View
           style={[
             backAnimatedStyle,
             { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', backgroundColor: '#3B82F6' },
           ]}
-          className="absolute inset-0 rounded-2xl p-5"
+          className="absolute inset-0 rounded-2xl p-5 justify-center"
         >
-          {/* Turkish Meaning Section */}
-          <View className="mb-3">
-            <Text className="text-xs text-blue-200 mb-1">Türkçe</Text>
-            <Text className="text-2xl font-bold text-white">
-              {card.content.meaningTr}
-            </Text>
-          </View>
+          {/* Label */}
+          <Text className="text-xs text-blue-200 mb-3 text-center">Example Sentence</Text>
 
-          {/* Divider */}
-          <View className="h-px bg-blue-400/30 my-2" />
-
-          {/* Example Sentence Section */}
-          <View className="flex-1">
-            <Text className="text-xs text-blue-200 mb-1">Example</Text>
-            <Text className="text-base text-white leading-relaxed">
-              {card.content.exampleSentence}
-            </Text>
-          </View>
+          {/* Example Sentence with bolded word (parsed from ** markers) */}
+          <Text className="text-lg text-white leading-relaxed text-center">
+            {renderSentenceWithBoldMarkers(card.content.exampleSentence)}
+          </Text>
 
           {/* Mastery Level Indicator */}
-          <View className="flex-row items-center mt-2">
+          <View className="flex-row items-center justify-center mt-4">
             <Text className="text-xs text-blue-200 mr-2">Mastery:</Text>
             <View className="flex-row">
               {/* Render 5 dots for mastery level */}
