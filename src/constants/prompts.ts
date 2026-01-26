@@ -61,3 +61,33 @@ CRITICAL: Respond ONLY with valid JSON in this exact format (no markdown, no cod
   "exampleSentence": "Your NEW example sentence with **target word** wrapped in asterisks"
 }`;
 };
+
+/**
+ * Phase 4: B1 Bridge - Transforms simple A2 phrases to natural B1 equivalents
+ * @param phrase - The simple A2 phrase to transform
+ * @returns Formatted prompt string for Gemini API
+ */
+export const createB1BridgePrompt = (phrase: string): string => {
+  return `You are an English teacher helping Turkish students upgrade their English from A2 to B1 level.
+
+Simple phrase (A2 level): "${phrase}"
+
+Task:
+Transform this phrase into a more natural, professional, or nuanced B1-level equivalent. Follow these rules:
+1. Keep the same meaning but make it sound more natural/fluent
+2. Use polite forms, contractions, or idiomatic expressions where appropriate
+3. The B1 version should be what a native speaker would actually say
+4. Provide a brief explanation of WHY this sounds more natural
+
+Examples of transformations:
+- "I want coffee" → "I'd like a coffee, please" (polite form + article)
+- "Where is bathroom?" → "Could you tell me where the restroom is?" (indirect question + polite)
+- "I don't understand" → "I'm sorry, I didn't quite catch that" (softer, more natural)
+- "This is good" → "This is really impressive" (more expressive vocabulary)
+
+CRITICAL: Respond ONLY with valid JSON in this exact format (no markdown, no code blocks):
+{
+  "b1Phrase": "The transformed B1-level phrase",
+  "explanation": "Brief explanation of what makes this more natural (1-2 sentences)"
+}`;
+};

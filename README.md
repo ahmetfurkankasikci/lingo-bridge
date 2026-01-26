@@ -11,6 +11,13 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 - Target words are **highlighted** in sentences for easy recognition
 - Beautiful flip animation to reveal meanings
 
+### 🌉 B1 Bridge
+
+- Transform simple A2 phrases into natural B1 equivalents
+- Side-by-side comparison: A2 → B1
+- Explanation of what makes the B1 version sound more natural
+- Example suggestions for quick testing
+
 ### 🔄 Context Refresh
 
 - Manually refresh example sentences with a tap
@@ -42,7 +49,7 @@ lingo-bridge/
 ├── app/                    # Expo Router pages
 │   ├── (tabs)/            # Tab navigation
 │   │   ├── index.tsx      # Home - vocabulary list
-│   │   ├── bridge.tsx     # B1 Bridge (coming soon)
+│   │   ├── bridge.tsx     # B1 Bridge - phrase transformer
 │   │   └── practice.tsx   # Practice mode (coming soon)
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
@@ -109,14 +116,14 @@ npm run ios
 1. **Add a Word**: Tap the + button on the home screen
 2. **View Cards**: Tap a card to flip and see the example sentence
 3. **Refresh Context**: Tap the 🔄 icon to get a new example sentence
-4. **Track Progress**: Watch your mastery dots fill up as you learn
+4. **B1 Bridge**: Go to Bridge tab, type a simple phrase, and transform it
 
 ## 🗺️ Roadmap
 
 - [x] Phase 1: Foundation & Architecture
 - [x] Phase 2: Dynamic Word Cards
 - [x] Phase 3: Context Refresh
-- [ ] Phase 4: B1 Bridge (A2 → B1 transformation)
+- [x] Phase 4: B1 Bridge (A2 → B1 transformation)
 - [ ] Phase 5: Interactive Practice Mode
 
 ## 📄 License

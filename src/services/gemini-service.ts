@@ -2,8 +2,8 @@
 // Handles API communication with Google Gemini 2.5 Flash
 
 import { Config } from '@/constants/config';
-import { createRegeneratePrompt, createWordCardPrompt } from '@/constants/prompts';
-import type { WordCardContent } from '@/types';
+import { createB1BridgePrompt, createRegeneratePrompt, createWordCardPrompt } from '@/constants/prompts';
+import type { B1BridgeResult, WordCardContent } from '@/types';
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -129,6 +129,38 @@ class GeminiService {
       return parsed.exampleSentence;
     } catch (error) {
       console.error('Failed to parse regeneration response:', cleanedResponse, error);
+      throw new Error('Invalid response format from Gemini API');
+    }
+  }
+
+  /**
+   * Phase 4: B1 Bridge - Transform simple A2 phrase to natural B1 equivalent.
+   * @param phrase - The simple A2-level phrase to transform
+   * @returns B1BridgeResult with upgraded phrase and explanation
+   */
+  async transformToB1(phrase: string): Promise<B1BridgeResult> {
+    // Generate the B1 Bridge prompt
+    const prompt = createB1BridgePrompt(phrase);
+
+    // Call Gemini API
+    const responseText = await this.generateContent(prompt);
+
+    // Parse JSON response
+    const cleanedResponse = responseText
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
+    try {
+      const parsed = JSON.parse(cleanedResponse) as B1BridgeResult;
+
+      if (!parsed.b1Phrase || !parsed.explanation) {
+        throw new Error('Missing fields in B1 Bridge response');
+      }
+
+      return parsed;
+    } catch (error) {
+      console.error('Failed to parse B1 Bridge response:', cleanedResponse, error);
       throw new Error('Invalid response format from Gemini API');
     }
   }
