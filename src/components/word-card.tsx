@@ -1,23 +1,23 @@
 // Phase 2: Word Card component with flip animation
-// Features: Front shows Turkish meaning, back shows example with refresh button
+// Features: Front shows Turkish meaning, back shows example with refresh and delete buttons
 
 import * as Haptics from 'expo-haptics';
-import { RefreshCw } from 'lucide-react-native';
+import { RefreshCw, Trash2 } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-  Easing,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
+    Easing,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withTiming,
 } from 'react-native-reanimated';
 
 import { useRefreshContext } from '@/hooks/use-context-refresh';
+import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard as WordCardType } from '@/types';
 
 interface WordCardProps {
   card: WordCardType; // The vocabulary card data
-  onDelete?: (id: string) => void; // Optional delete callback
 }
 
 // Helper to render sentence with **bold** markers parsed
@@ -38,7 +38,7 @@ function renderSentenceWithBoldMarkers(sentence: string) {
   });
 }
 
-export function WordCard({ card, onDelete }: WordCardProps) {
+export function WordCard({ card }: WordCardProps) {
   // Shared value for flip animation (0 = front, 1 = back)
   const flipProgress = useSharedValue(0);
 
@@ -47,6 +47,9 @@ export function WordCard({ card, onDelete }: WordCardProps) {
 
   // Manual refresh mutation
   const refreshMutation = useRefreshContext();
+
+  // Delete function from store
+  const removeWord = useVocabStore((state) => state.removeWord);
 
   // Handle card flip with haptic feedback
   const handleFlip = async () => {
@@ -67,6 +70,12 @@ export function WordCard({ card, onDelete }: WordCardProps) {
   const handleRefresh = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     refreshMutation.mutate(card);
+  };
+
+  // Handle delete
+  const handleDelete = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    removeWord(card.id);
   };
 
   // Front side animation: visible when progress is 0-0.5, rotates 0-90deg
@@ -105,6 +114,14 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           ]}
           className="absolute inset-0 bg-white rounded-2xl p-5 justify-center items-center"
         >
+          {/* Delete Button - Top Right */}
+          <TouchableOpacity
+            onPress={handleDelete}
+            className="absolute top-3 right-3 p-2"
+          >
+            <Trash2 size={18} color="#EF4444" />
+          </TouchableOpacity>
+
           {/* Label */}
           <Text className="text-sm text-gray-500 mb-2">Türkçe</Text>
 
@@ -127,18 +144,29 @@ export function WordCard({ card, onDelete }: WordCardProps) {
           ]}
           className="absolute inset-0 rounded-2xl p-5 justify-center"
         >
-          {/* Refresh Button - Top Right */}
-          <TouchableOpacity
-            onPress={handleRefresh}
-            disabled={refreshMutation.isPending}
-            className="absolute top-3 right-3 p-2 bg-blue-600 rounded-full"
-          >
-            {refreshMutation.isPending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <RefreshCw size={18} color="#fff" />
-            )}
-          </TouchableOpacity>
+          {/* Action Buttons - Top Right */}
+          <View className="absolute top-3 right-3 flex-row">
+            {/* Refresh Button */}
+            <TouchableOpacity
+              onPress={handleRefresh}
+              disabled={refreshMutation.isPending}
+              className="p-2 bg-blue-600 rounded-full mr-2"
+            >
+              {refreshMutation.isPending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <RefreshCw size={18} color="#fff" />
+              )}
+            </TouchableOpacity>
+
+            {/* Delete Button */}
+            <TouchableOpacity
+              onPress={handleDelete}
+              className="p-2 bg-red-500 rounded-full"
+            >
+              <Trash2 size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
 
           {/* Label */}
           <Text className="text-xs text-blue-200 mb-3 text-center">Example Sentence</Text>
