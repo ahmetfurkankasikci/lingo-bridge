@@ -3,13 +3,14 @@
 
 import * as Haptics from 'expo-haptics';
 import { RefreshCw, Trash2 } from 'lucide-react-native';
+import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, Text, TouchableOpacity, View } from 'react-native';
 import Animated, {
-    Easing,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
+  Easing,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { useRefreshContext } from '@/hooks/use-context-refresh';
@@ -18,6 +19,7 @@ import type { WordCard as WordCardType } from '@/types';
 
 interface WordCardProps {
   card: WordCardType; // The vocabulary card data
+  forcedFlipMode?: 'front' | 'back' | null; // Control flip state programmatically
 }
 
 // Helper to render sentence with **bold** markers parsed
@@ -38,7 +40,7 @@ function renderSentenceWithBoldMarkers(sentence: string) {
   });
 }
 
-export function WordCard({ card }: WordCardProps) {
+export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
   // Shared value for flip animation (0 = front, 1 = back)
   const flipProgress = useSharedValue(0);
 
@@ -50,6 +52,23 @@ export function WordCard({ card }: WordCardProps) {
 
   // Delete function from store
   const removeWord = useVocabStore((state) => state.removeWord);
+
+  // Handle programmatic flip
+  useEffect(() => {
+    if (!forcedFlipMode) return;
+
+    const targetValue = forcedFlipMode === 'back' ? 1 : 0;
+    const targetState = forcedFlipMode === 'back';
+
+    // Only animate if not already in the desired state
+    if (isFlipped.value !== targetState) {
+        isFlipped.value = targetState;
+        flipProgress.value = withTiming(targetValue, {
+            duration: 400,
+            easing: Easing.out(Easing.cubic),
+        });
+    }
+  }, [forcedFlipMode, isFlipped, flipProgress]);
 
   // Handle card flip with haptic feedback
   const handleFlip = async () => {

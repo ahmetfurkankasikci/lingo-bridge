@@ -3,8 +3,8 @@
 
 import { FlashList } from "@shopify/flash-list";
 import * as Haptics from 'expo-haptics';
-import { BookOpen, Plus } from 'lucide-react-native';
-import { useState } from 'react';
+import { BookOpen, Plus, Repeat } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
 import { StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,6 +17,9 @@ export default function HomeScreen() {
   // Modal visibility state
   const [isModalVisible, setIsModalVisible] = useState(false);
 
+  // Flip All state: 'front' (Turkish), 'back' (Example), or null (Individual)
+  const [forcedFlipMode, setForcedFlipMode] = useState<'front' | 'back' | null>(null);
+
   // Get words from Zustand store (auto-synced with MMKV)
   const words = useVocabStore((state) => state.words);
 
@@ -26,10 +29,21 @@ export default function HomeScreen() {
     setIsModalVisible(true);
   };
 
-  // Render each word card item
-  const renderItem = ({ item }: { item: WordCardType }) => {
-    return <WordCard card={item} />;
+  // Handle Flip All toggle
+  const handleFlipAll = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    // Toggle between back (examples) and front (meanings)
+    // If currently null (mixed), force to back first to show examples
+    setForcedFlipMode((prev) => (prev === 'back' ? 'front' : 'back'));
   };
+
+  // Render each word card item (wrapped in callback for FlashList optimization)
+  const renderItem = useCallback(
+    ({ item }: { item: WordCardType }) => {
+      return <WordCard card={item} forcedFlipMode={forcedFlipMode} />;
+    },
+    [forcedFlipMode]
+  );
 
   // Empty state component when no words exist
   const EmptyState = () => (
@@ -66,13 +80,30 @@ export default function HomeScreen() {
       <StatusBar barStyle="dark-content" />
 
       {/* Header */}
-      <View className="px-5 py-4 border-b border-gray-100 bg-white">
-        <Text className="text-2xl font-bold text-gray-900">Lingo Bridge</Text>
-        <Text className="text-sm text-gray-500 mt-1">
-          {words.length > 0
-            ? `${words.length} word${words.length > 1 ? 's' : ''} in your vocabulary`
-            : 'Your daily vocabulary companion'}
-        </Text>
+      <View className="px-5 py-4 border-b border-gray-100 bg-white flex-row justify-between items-center">
+        <View>
+          <Text className="text-2xl font-bold text-gray-900">Lingo Bridge</Text>
+          <Text className="text-sm text-gray-500 mt-1">
+            {words.length > 0
+              ? `${words.length} word${words.length > 1 ? 's' : ''} in your vocabulary`
+              : 'Your daily vocabulary companion'}
+          </Text>
+        </View>
+
+        {/* Flip All Button */}
+        {words.length > 0 && (
+          <TouchableOpacity
+            onPress={handleFlipAll}
+            className={`p-3 rounded-full ${
+              forcedFlipMode === 'back' ? 'bg-indigo-100' : 'bg-gray-100'
+            }`}
+          >
+            <Repeat
+              size={22}
+              color={forcedFlipMode === 'back' ? '#4F46E5' : '#6B7280'}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Word List or Empty State */}
@@ -82,6 +113,7 @@ export default function HomeScreen() {
         <FlashList
           data={words}
           renderItem={renderItem}
+          extraData={forcedFlipMode} // Ensure re-render when flip state changes
           keyExtractor={(item) => item.id}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
