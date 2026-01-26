@@ -10,6 +10,7 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 - Example sentences are B1-level (10-20 words with conjunctions)
 - Target words are **highlighted** in sentences for easy recognition
 - Beautiful flip animation to reveal meanings
+- Delete words with trash icon
 
 ### 🌉 B1 Bridge
 
@@ -24,10 +25,19 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 - Get fresh, varied contexts for the same word
 - Prevents rote memorization
 
+### 📝 Practice Mode
+
+- **TR → EN**: See Turkish meaning, type English sentence
+- **EN → TR**: See English sentence with highlighted word, type Turkish meaning
+- **Gap Fill**: Fill in the blank with the correct word
+- Score tracking and mastery level updates
+- Haptic feedback for correct/incorrect answers
+
 ### 🎯 Mastery Tracking
 
 - Visual mastery level indicator (0-5)
 - Track your progress for each word
+- Mastery updates based on practice performance
 
 ## 🛠️ Tech Stack
 
@@ -50,13 +60,15 @@ lingo-bridge/
 │   ├── (tabs)/            # Tab navigation
 │   │   ├── index.tsx      # Home - vocabulary list
 │   │   ├── bridge.tsx     # B1 Bridge - phrase transformer
-│   │   └── practice.tsx   # Practice mode (coming soon)
+│   │   └── practice.tsx   # Practice - quiz modes
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
 │   ├── components/        # Reusable UI components
-│   │   ├── word-card.tsx  # Flip card with refresh
+│   │   ├── word-card.tsx  # Flip card with refresh/delete
 │   │   └── add-word-modal.tsx
 │   ├── hooks/             # Custom React hooks
+│   │   ├── use-add-word.ts
+│   │   ├── use-transform-to-b1.ts
 │   │   └── use-context-refresh.ts
 │   ├── services/          # API services
 │   │   └── gemini-service.ts
@@ -116,7 +128,9 @@ npm run ios
 1. **Add a Word**: Tap the + button on the home screen
 2. **View Cards**: Tap a card to flip and see the example sentence
 3. **Refresh Context**: Tap the 🔄 icon to get a new example sentence
-4. **B1 Bridge**: Go to Bridge tab, type a simple phrase, and transform it
+4. **Delete Cards**: Tap the 🗑️ icon to remove a word
+5. **B1 Bridge**: Go to Bridge tab, type a simple phrase, and transform it
+6. **Practice**: Go to Practice tab, select a mode, and test your knowledge
 
 ## 🗺️ Roadmap
 
@@ -124,7 +138,7 @@ npm run ios
 - [x] Phase 2: Dynamic Word Cards
 - [x] Phase 3: Context Refresh
 - [x] Phase 4: B1 Bridge (A2 → B1 transformation)
-- [ ] Phase 5: Interactive Practice Mode
+- [x] Phase 5: Interactive Practice Mode
 
 ## 📄 License
 
