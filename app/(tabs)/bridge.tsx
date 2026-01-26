@@ -1,7 +1,6 @@
 // Phase 4: B1 Bridge Screen
 // Transform A2 phrases to natural B1 equivalents with explanation
 
-import { useMutation } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { ArrowRight, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
@@ -19,24 +18,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { geminiService } from '@/services/gemini-service';
+import { useTransformToB1 } from '@/hooks/use-transform-to-b1';
 import type { B1BridgeResult } from '@/types';
 
 export default function BridgeScreen() {
   const [phrase, setPhrase] = useState('');
-  const [originalPhrase, setOriginalPhrase] = useState(''); // Preserved A2 phrase for display
+  const [originalPhrase, setOriginalPhrase] = useState('');
   const [result, setResult] = useState<B1BridgeResult | null>(null);
 
-  // TanStack Query mutation for transformation
-  const transformMutation = useMutation({
-    mutationFn: (inputPhrase: string) => geminiService.transformToB1(inputPhrase),
-    onSuccess: async (data) => {
-      setResult(data);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    },
-    onError: async () => {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    },
+  // Use custom hook for transformation
+  const transformMutation = useTransformToB1({
+    onSuccess: (data) => setResult(data),
   });
 
   const handleTransform = async () => {
@@ -45,7 +37,7 @@ export default function BridgeScreen() {
 
     Keyboard.dismiss();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setOriginalPhrase(trimmed); // Save the phrase before transforming
+    setOriginalPhrase(trimmed);
     transformMutation.mutate(trimmed);
   };
 
@@ -136,9 +128,7 @@ export default function BridgeScreen() {
                 {/* Side by Side Comparison */}
                 <View className="flex-row items-center">
                   {/* A2 Card */}
-                  <View
-                    className="flex-1 bg-gray-200 rounded-xl p-4"
-                  >
+                  <View className="flex-1 bg-gray-200 rounded-xl p-4">
                     <Text className="text-xs text-gray-500 mb-1">A2 - Simple</Text>
                     <Text className="text-base text-gray-800">{originalPhrase}</Text>
                   </View>

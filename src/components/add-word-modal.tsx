@@ -1,8 +1,6 @@
 // Phase 2: Modal component for adding new vocabulary words
-// Features: Input validation, TanStack Query mutation, haptic feedback, AI integration
-// Note: Modal positioned at TOP to avoid Android keyboard issues
+// Features: Input validation, custom hook mutation, haptic feedback, AI integration
 
-import { useMutation } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { X } from 'lucide-react-native';
 import { useState } from 'react';
@@ -17,9 +15,7 @@ import {
     View,
 } from 'react-native';
 
-import { geminiService } from '@/services/gemini-service';
-import { useVocabStore } from '@/store/vocab-store';
-import type { WordCard, WordCardContent } from '@/types';
+import { useAddWord } from '@/hooks/use-add-word';
 
 interface AddWordModalProps {
   visible: boolean; // Controls modal visibility
@@ -27,34 +23,13 @@ interface AddWordModalProps {
 }
 
 export function AddWordModal({ visible, onClose }: AddWordModalProps) {
-  // Local state for form input only (loading/error handled by TanStack Query)
   const [word, setWord] = useState('');
 
-  // Zustand store action to add word
-  const addWord = useVocabStore((state) => state.addWord);
-
-  // TanStack Query mutation for generating word card
-  const generateWordMutation = useMutation({
-    mutationFn: (wordToGenerate: string): Promise<WordCardContent> => {
-      return geminiService.generateWordCard(wordToGenerate);
-    },
-    onSuccess: async (content, wordToGenerate) => {
-      const newCard: WordCard = {
-        id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        word: wordToGenerate,
-        content,
-        createdAt: Date.now(),
-        lastContextUpdate: Date.now(),
-        masteryLevel: 0,
-      };
-
-      addWord(newCard);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  // Use custom hook for adding words
+  const addWordMutation = useAddWord({
+    onSuccess: () => {
       setWord('');
       onClose();
-    },
-    onError: async () => {
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     },
   });
 
@@ -64,16 +39,16 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
 
     Keyboard.dismiss();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    generateWordMutation.mutate(trimmedWord);
+    addWordMutation.mutate(trimmedWord);
   };
 
   const handleClose = async () => {
-    if (generateWordMutation.isPending) return;
+    if (addWordMutation.isPending) return;
 
     Keyboard.dismiss();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setWord('');
-    generateWordMutation.reset();
+    addWordMutation.reset();
     onClose();
   };
 
@@ -81,7 +56,7 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
     <Modal visible={visible} animationType="fade" transparent onRequestClose={handleClose}>
       <TouchableWithoutFeedback onPress={handleClose}>
         <View className="flex-1 bg-black/50 justify-center px-4">
-          {/* Modal Content - positioned in CENTER */}
+          {/* Modal Content */}
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View
               className="bg-white rounded-3xl p-6"
@@ -106,7 +81,7 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
                   autoCapitalize="none"
                   autoCorrect={false}
                   autoFocus
-                  editable={!generateWordMutation.isPending}
+                  editable={!addWordMutation.isPending}
                   className="border border-gray-300 rounded-xl px-4 py-3 text-base text-gray-900"
                   onSubmitEditing={handleAddWord}
                   returnKeyType="done"
@@ -114,11 +89,11 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
               </View>
 
               {/* Error Message */}
-              {generateWordMutation.isError && (
+              {addWordMutation.isError && (
                 <View className="mb-4 p-3 bg-red-50 rounded-lg">
                   <Text className="text-sm text-red-600">
-                    {generateWordMutation.error instanceof Error
-                      ? generateWordMutation.error.message
+                    {addWordMutation.error instanceof Error
+                      ? addWordMutation.error.message
                       : 'Failed to generate word card'}
                   </Text>
                 </View>
@@ -127,18 +102,18 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
               {/* Submit Button */}
               <TouchableOpacity
                 onPress={handleAddWord}
-                disabled={generateWordMutation.isPending || !word.trim()}
+                disabled={addWordMutation.isPending || !word.trim()}
                 className={`rounded-xl py-4 items-center ${
-                  generateWordMutation.isPending || !word.trim() ? 'bg-blue-300' : 'bg-blue-500'
+                  addWordMutation.isPending || !word.trim() ? 'bg-blue-300' : 'bg-blue-500'
                 }`}
                 style={{
                   boxShadow:
-                    generateWordMutation.isPending || !word.trim()
+                    addWordMutation.isPending || !word.trim()
                       ? 'none'
                       : '0 2px 4px rgba(59, 130, 246, 0.3)',
                 }}
               >
-                {generateWordMutation.isPending ? (
+                {addWordMutation.isPending ? (
                   <View className="flex-row items-center">
                     <ActivityIndicator color="#fff" className="mr-2" />
                     <Text className="text-white font-semibold text-base">Generating...</Text>
