@@ -1,17 +1,20 @@
 // Root layout - Provides QueryClientProvider and routes to tabs
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import '../global.css';
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack screenOptions={{ headerShown: false }}>
-        {/* Default route redirects to (tabs) */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Default route redirects to (tabs) */}
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

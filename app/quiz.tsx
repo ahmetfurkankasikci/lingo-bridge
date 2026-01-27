@@ -1,29 +1,23 @@
+import { EmptyState } from '@/components/empty-state';
+import { ProgressHeader } from '@/components/progress-header';
+import { PracticeMode, QuestionItem, QuizQuestion } from '@/components/quiz-question';
+import { QuizResults } from '@/components/quiz-results';
+import { useVocabStore } from '@/store/vocab-store';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Check, RefreshCw, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-    Keyboard,
-    KeyboardAvoidingView,
-    Platform,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { useVocabStore } from '@/store/vocab-store';
-import type { WordCard } from '@/types';
-
-type PracticeMode = 'tr-to-en' | 'en-to-tr' | 'gap-fill';
-
-// Single question item
-interface QuestionItem {
-  card: WordCard;
-  mode: PracticeMode;
-}
 
 interface QuizState {
   isStarted: boolean;
@@ -40,26 +34,6 @@ interface QuizState {
 function extractTargetWord(sentence: string): string {
   const match = sentence.match(/\*\*([^*]+)\*\*/);
   return match ? match[1] : '';
-}
-
-// Helper to render sentence with highlighted word
-function renderHighlightedSentence(sentence: string) {
-  const parts = sentence.split(/\*\*([^*]+)\*\*/g);
-  return parts.map((part, index) => {
-    if (index % 2 === 1) {
-      return (
-        <Text key={index} className="font-bold text-yellow-500 bg-yellow-100 px-1 rounded">
-          {part}
-        </Text>
-      );
-    }
-    return <Text key={index}>{part}</Text>;
-  });
-}
-
-// Helper to create gap sentence (replace word with blank)
-function createGapSentence(sentence: string): string {
-  return sentence.replace(/\*\*([^*]+)\*\*/g, '_____');
 }
 
 // Get random mode
@@ -200,44 +174,6 @@ export default function QuizScreen() {
     }
   };
 
-  const renderQuestion = () => {
-    const currentQuestion = quiz.queue[quiz.currentIndex];
-    if (!currentQuestion) return null;
-
-    switch (currentQuestion.mode) {
-      case 'tr-to-en':
-        return (
-          <View className="items-center">
-            <Text className="text-sm text-gray-500 mb-2">Turkish Meaning:</Text>
-            <Text className="text-3xl font-bold text-gray-900 text-center">
-              {currentQuestion.card.content.meaningTr}
-            </Text>
-            <Text className="text-sm text-gray-400 mt-4">What is the English word?</Text>
-          </View>
-        );
-      case 'en-to-tr':
-        return (
-          <View className="items-center">
-            <Text className="text-sm text-gray-500 mb-2">English Sentence:</Text>
-            <Text className="text-lg text-gray-900 text-center leading-relaxed">
-              {renderHighlightedSentence(currentQuestion.card.content.exampleSentence)}
-            </Text>
-            <Text className="text-sm text-gray-400 mt-4">Turkish meaning of the highlighted word?</Text>
-          </View>
-        );
-      case 'gap-fill':
-        return (
-          <View className="items-center">
-            <Text className="text-sm text-gray-500 mb-2">Fill in the blank:</Text>
-            <Text className="text-lg text-gray-900 text-center leading-relaxed">
-              {createGapSentence(currentQuestion.card.content.exampleSentence)}
-            </Text>
-            <Text className="text-sm text-gray-400 mt-4">Hint: {currentQuestion.card.content.meaningTr}</Text>
-          </View>
-        );
-    }
-  };
-
   const renderCorrectAnswer = () => {
     const currentQuestion = quiz.queue[quiz.currentIndex];
     if (!currentQuestion || !quiz.isAnswered) return null;
@@ -262,47 +198,21 @@ export default function QuizScreen() {
   // No words available state
   if (words.length === 0) {
     return (
-      <View
-        className="flex-1 bg-gray-50 items-center justify-center p-4"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-      >
-        <Text className="text-xl font-bold text-gray-900 mb-2">No Words Yet</Text>
-        <Text className="text-gray-500 text-center">Add some vocabulary words to start.</Text>
-        <TouchableOpacity
-          onPress={exitQuiz}
-          className="bg-gray-200 rounded-2xl py-3 px-6 mt-4"
-        >
-          <Text className="text-gray-700 font-bold">Go Back</Text>
-        </TouchableOpacity>
-      </View>
+      <EmptyState
+        description="Add some vocabulary words to start."
+        onAction={exitQuiz}
+      />
     );
   }
 
   // Quiz Finished View
   if (quiz.isFinished) {
     return (
-      <View
-        className="flex-1 bg-gray-50 items-center justify-center p-4"
-        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
-      >
-        <Text className="text-3xl font-bold text-gray-900 mb-4">Quiz Complete! 🎉</Text>
-        <View className="bg-white rounded-2xl p-8 mb-8 w-full items-center" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <Text className="text-gray-500 text-lg mb-2">Your Score</Text>
-          <Text className="text-5xl font-bold text-indigo-600 mb-2">
-            {quiz.score}/{quiz.queue.length}
-          </Text>
-          <Text className="text-gray-400">
-            {Math.round((quiz.score / quiz.queue.length) * 100)}% Accuracy
-          </Text>
-        </View>
-        <TouchableOpacity
-          onPress={exitQuiz}
-          className="bg-indigo-500 rounded-2xl py-4 px-8"
-          style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
-        >
-          <Text className="text-white font-bold text-lg">Back to Menu</Text>
-        </TouchableOpacity>
-      </View>
+      <QuizResults
+        score={quiz.score}
+        totalCount={quiz.queue.length}
+        onExit={exitQuiz}
+      />
     );
   }
 
@@ -321,16 +231,12 @@ export default function QuizScreen() {
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1 p-4">
-            {/* Header */}
-            <View className="flex-row items-center justify-between mb-4">
-              <TouchableOpacity onPress={exitQuiz} className="p-2 bg-gray-200 rounded-full">
-                <X size={20} color="#374151" />
-              </TouchableOpacity>
-              <Text className="text-lg font-semibold text-gray-600">
-                {quiz.currentIndex + 1} / {quiz.queue.length}
-              </Text>
-              <View className="w-9" />
-            </View>
+
+            <ProgressHeader
+              current={quiz.currentIndex + 1}
+              total={quiz.queue.length}
+              onExit={exitQuiz}
+            />
 
             {/* Mode Badge */}
             <View className="bg-indigo-100 rounded-full px-4 py-2 self-center mb-4">
@@ -339,7 +245,7 @@ export default function QuizScreen() {
 
             {/* Question Card */}
             <View className="bg-white rounded-2xl p-6 mb-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-              {renderQuestion()}
+              <QuizQuestion questionItem={quiz.queue[quiz.currentIndex]} />
             </View>
 
             {/* Input */}
@@ -351,13 +257,12 @@ export default function QuizScreen() {
                 placeholderTextColor="#9CA3AF"
                 editable={!quiz.isAnswered}
                 autoCapitalize="none"
-                className={`border-2 rounded-xl px-4 py-3 text-base text-gray-900 ${
-                  quiz.isAnswered
-                    ? quiz.isCorrect
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-red-500 bg-red-50'
-                    : 'border-gray-300'
-                }`}
+                className={`border-2 rounded-xl px-5 py-3 text-base text-gray-900 ${quiz.isAnswered
+                  ? quiz.isCorrect
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-red-500 bg-red-50'
+                  : 'border-gray-300'
+                  }`}
                 onSubmitEditing={checkAnswer}
               />
             </View>
@@ -384,9 +289,8 @@ export default function QuizScreen() {
             <TouchableOpacity
               onPress={quiz.isAnswered ? nextQuestion : checkAnswer}
               disabled={!quiz.userAnswer.trim() && !quiz.isAnswered}
-              className={`rounded-xl py-4 flex-row items-center justify-center ${
-                !quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-indigo-300' : 'bg-indigo-500'
-              }`}
+              className={`rounded-xl py-4 flex-row items-center justify-center ${!quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-indigo-300' : 'bg-indigo-500'
+                }`}
               style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
             >
               {quiz.isAnswered ? (

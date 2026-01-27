@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Play } from 'lucide-react-native';
+import { Layers, Play } from 'lucide-react-native';
 import {
   Text,
   TouchableOpacity,
@@ -16,6 +16,10 @@ export default function PracticeScreen() {
 
   const startQuiz = () => {
     router.push('/quiz');
+  };
+
+  const startFlashcards = () => {
+    router.push('/flash-cards');
   };
 
   // No words available
@@ -49,14 +53,27 @@ export default function PracticeScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
-        onPress={startQuiz}
-        className="bg-indigo-500 rounded-2xl py-4 px-8 flex-row items-center"
-        style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
-      >
-        <Play size={24} color="#fff" />
-        <Text className="text-white font-bold text-lg ml-2">Start Quiz</Text>
-      </TouchableOpacity>
+      <View className="w-full space-y-4">
+        {/* Flashcards Button */}
+        <TouchableOpacity
+          onPress={startFlashcards}
+          className="bg-white border-2 border-indigo-500 rounded-2xl py-4 px-8 flex-row items-center justify-center mb-4"
+          style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.1)' }}
+        >
+          <Layers size={24} color="#6366F1" />
+          <Text className="text-indigo-600 font-bold text-lg ml-2">Flashcard Deck</Text>
+        </TouchableOpacity>
+
+        {/* Start Quiz Button */}
+        <TouchableOpacity
+          onPress={startQuiz}
+          className="bg-indigo-500 rounded-2xl py-4 px-8 flex-row items-center justify-center"
+          style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
+        >
+          <Play size={24} color="#fff" />
+          <Text className="text-white font-bold text-lg ml-2">Start Quiz</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
