@@ -12,6 +12,13 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 - Beautiful flip animation to reveal meanings
 - Delete words with trash icon
 
+### 🃏 Flashcard Deck
+
+- Stacked card interface with depth animations
+- Smooth swipe gestures (Left/Right)
+- Haptic feedback on flip and swipe
+- Progress tracking with unified header
+
 ### 🌉 B1 Bridge
 
 - Transform simple A2 phrases into natural B1 equivalents
@@ -64,7 +71,12 @@ lingo-bridge/
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
 │   ├── components/        # Reusable UI components
-│   │   ├── word-card.tsx  # Flip card with refresh/delete
+│   │   ├── word-card.tsx       # Flip card logic
+│   │   ├── stacked-card.tsx    # Visual stack wrapper
+│   │   ├── progress-header.tsx # Unified progress header
+│   │   ├── empty-state.tsx     # Unified empty state
+│   │   ├── quiz-question.tsx   # Quiz question rendering
+│   │   ├── quiz-results.tsx    # Quiz completion summary
 │   │   └── add-word-modal.tsx
 │   ├── hooks/             # Custom React hooks
 │   │   ├── use-add-word.ts
