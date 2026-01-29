@@ -5,18 +5,29 @@ import { QuizResults } from '@/components/quiz-results';
 import { useVocabStore } from '@/store/vocab-store';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Check, RefreshCw, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { Check, RefreshCw, SkipForward, X } from 'lucide-react-native';
+import { useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeOut,
+  SlideInRight,
+  SlideOutLeft,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface QuizState {
@@ -26,7 +37,9 @@ interface QuizState {
   userAnswer: string;
   isAnswered: boolean;
   isCorrect: boolean;
-  score: number;
+  correctCount: number;
+  wrongCount: number;
+  skippedCount: number;
   isFinished: boolean;
 }
 
@@ -47,6 +60,10 @@ export default function QuizScreen() {
   const updateWord = useVocabStore((state) => state.updateWord);
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const inputRef = useRef<TextInput>(null);
+
+  // Animation values
+  const shakeX = useSharedValue(0);
 
   const [quiz, setQuiz] = useState<QuizState>({
     isStarted: false,
@@ -55,17 +72,16 @@ export default function QuizScreen() {
     userAnswer: '',
     isAnswered: false,
     isCorrect: false,
-    score: 0,
+    correctCount: 0,
+    wrongCount: 0,
+    skippedCount: 0,
     isFinished: false,
   });
 
   // Generate a shuffled queue and start immediately on mount
   useEffect(() => {
-    // If no words, valid check handled in render or we can redirect back
     if (words.length === 0) return;
 
-    // Use a local copy to generate queue once, ignoring valid future updates to 'words'
-    // This prevents the quiz from resetting when 'updateWord' changes the store
     const shuffledWords = [...words].sort(() => Math.random() - 0.5);
     const queue = shuffledWords.map((card) => ({
       card,
@@ -79,16 +95,69 @@ export default function QuizScreen() {
       userAnswer: '',
       isAnswered: false,
       isCorrect: false,
-      score: 0,
+      correctCount: 0,
+      wrongCount: 0,
+      skippedCount: 0,
       isFinished: false,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run ONLY once on mount
+  }, []);
+
+  // Auto-focus input when question changes
+  useEffect(() => {
+    if (quiz.isStarted && !quiz.isAnswered && !quiz.isFinished) {
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [quiz.currentIndex, quiz.isStarted, quiz.isAnswered, quiz.isFinished]);
+
+  // Shake animation style
+  const shakeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }],
+  }));
+
+  // Trigger shake animation
+  const triggerShake = () => {
+    shakeX.value = withSequence(
+      withTiming(-10, { duration: 50 }),
+      withTiming(10, { duration: 50 }),
+      withTiming(-10, { duration: 50 }),
+      withTiming(10, { duration: 50 }),
+      withTiming(0, { duration: 50 })
+    );
+  };
+
+  // Calculate progress percentage
+  const progress = quiz.queue.length > 0
+    ? ((quiz.currentIndex) / quiz.queue.length) * 100
+    : 0;
 
   // Exit quiz
   const exitQuiz = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.back();
+  };
+
+  // Restart quiz
+  const restartQuiz = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
+    const queue = shuffledWords.map((card) => ({
+      card,
+      mode: getRandomMode(),
+    }));
+
+    setQuiz({
+      isStarted: true,
+      queue,
+      currentIndex: 0,
+      userAnswer: '',
+      isAnswered: false,
+      isCorrect: false,
+      correctCount: 0,
+      wrongCount: 0,
+      skippedCount: 0,
+      isFinished: false,
+    });
   };
 
   // Check the answer
@@ -106,24 +175,20 @@ export default function QuizScreen() {
 
     const checkMatch = (user: string, ...targets: string[]) => {
       const normalizedUser = user.trim().toLowerCase();
-      // Flatten all targets (some might be comma separated strings)
       const allTargets = targets.flatMap(t => t.split(/[,;]/).map(s => s.trim().toLowerCase()));
       return allTargets.includes(normalizedUser);
     };
 
     switch (currentQuestion.mode) {
       case 'tr-to-en': {
-        // User should type the English word (accepts conjugated OR base form)
         correct = checkMatch(userAnswer, targetWord, baseWord);
         break;
       }
       case 'en-to-tr': {
-        // User should type Turkish meaning
         correct = checkMatch(userAnswer, currentQuestion.card.content.meaningTr);
         break;
       }
       case 'gap-fill': {
-        // User should type the missing word (accepts conjugated OR base form)
         correct = checkMatch(userAnswer, targetWord, baseWord);
         break;
       }
@@ -136,19 +201,33 @@ export default function QuizScreen() {
 
     updateWord(currentQuestion.card.id, { masteryLevel: newMastery });
 
-    // Haptic feedback
+    // Haptic and animation feedback
     if (correct) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } else {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      triggerShake();
     }
 
     setQuiz((prev) => ({
       ...prev,
       isAnswered: true,
       isCorrect: correct,
-      score: correct ? prev.score + 1 : prev.score,
+      correctCount: correct ? prev.correctCount + 1 : prev.correctCount,
+      wrongCount: !correct ? prev.wrongCount + 1 : prev.wrongCount,
     }));
+  };
+
+  // Skip question
+  const skipQuestion = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    setQuiz((prev) => ({
+      ...prev,
+      skippedCount: prev.skippedCount + 1,
+    }));
+
+    nextQuestion();
   };
 
   // Move to next question or finish
@@ -209,9 +288,12 @@ export default function QuizScreen() {
   if (quiz.isFinished) {
     return (
       <QuizResults
-        score={quiz.score}
+        correctCount={quiz.correctCount}
+        wrongCount={quiz.wrongCount}
+        skippedCount={quiz.skippedCount}
         totalCount={quiz.queue.length}
         onExit={exitQuiz}
+        onRetry={restartQuiz}
       />
     );
   }
@@ -228,9 +310,18 @@ export default function QuizScreen() {
   // Active Quiz View
   return (
     <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="flex-1 p-4">
+          <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ flexGrow: 1, padding: 16 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
 
             <ProgressHeader
               current={quiz.currentIndex + 1}
@@ -238,42 +329,81 @@ export default function QuizScreen() {
               onExit={exitQuiz}
             />
 
+            {/* Progress Bar */}
+            <View className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
+              <View
+                className="h-full bg-indigo-500 rounded-full"
+                style={{ width: `${progress}%` }}
+              />
+            </View>
+
+            {/* Running Score */}
+            <View className="flex-row justify-center items-center mb-4">
+              <View className="flex-row items-center mr-4">
+                <Check size={16} color="#22C55E" />
+                <Text className="text-green-600 font-medium ml-1">{quiz.correctCount}</Text>
+              </View>
+              <View className="flex-row items-center mr-4">
+                <X size={16} color="#EF4444" />
+                <Text className="text-red-500 font-medium ml-1">{quiz.wrongCount}</Text>
+              </View>
+              {quiz.skippedCount > 0 && (
+                <View className="flex-row items-center">
+                  <SkipForward size={16} color="#9CA3AF" />
+                  <Text className="text-gray-400 font-medium ml-1">{quiz.skippedCount}</Text>
+                </View>
+              )}
+            </View>
+
             {/* Mode Badge */}
             <View className="bg-indigo-100 rounded-full px-4 py-2 self-center mb-4">
               <Text className="text-indigo-600 font-medium">{getModeLabel(quiz.queue[quiz.currentIndex].mode)}</Text>
             </View>
 
-            {/* Question Card */}
-            <View className="bg-white rounded-2xl p-6 mb-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            {/* Question Card with Animation */}
+            <Animated.View
+              key={quiz.currentIndex}
+              entering={SlideInRight.duration(300)}
+              exiting={SlideOutLeft.duration(200)}
+              className="bg-white rounded-2xl p-6 mb-4"
+              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+            >
               <QuizQuestion questionItem={quiz.queue[quiz.currentIndex]} />
-            </View>
+            </Animated.View>
 
-            {/* Input */}
-            <View className="mb-4">
+            {/* Input with Shake Animation */}
+            <Animated.View style={shakeStyle} className="mb-4">
               <TextInput
+                ref={inputRef}
                 value={quiz.userAnswer}
                 onChangeText={(text) => setQuiz((prev) => ({ ...prev, userAnswer: text }))}
                 placeholder="Type your answer..."
                 placeholderTextColor="#9CA3AF"
                 editable={!quiz.isAnswered}
                 autoCapitalize="none"
-                className={`border-2 rounded-xl px-5 py-3 text-base text-gray-900 ${quiz.isAnswered
+                autoCorrect={false}
+                returnKeyType="send"
+                className={`border-2 rounded-xl px-5 py-4 text-lg text-gray-900 ${quiz.isAnswered
                   ? quiz.isCorrect
                     ? 'border-green-500 bg-green-50'
                     : 'border-red-500 bg-red-50'
-                  : 'border-gray-300'
+                  : 'border-gray-300 bg-white'
                   }`}
                 onSubmitEditing={checkAnswer}
               />
-            </View>
+            </Animated.View>
 
-            {/* Result */}
+            {/* Result Feedback with Animation */}
             {quiz.isAnswered && (
-              <View className={`rounded-xl p-4 mb-4 flex-row items-center ${quiz.isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
+              <Animated.View
+                entering={FadeIn.duration(200)}
+                exiting={FadeOut.duration(100)}
+                className={`rounded-xl p-4 mb-4 flex-row items-center ${quiz.isCorrect ? 'bg-green-100' : 'bg-red-100'}`}
+              >
                 {quiz.isCorrect ? <Check size={24} color="#22C55E" /> : <X size={24} color="#EF4444" />}
                 <View className="ml-3 flex-1">
                   <Text className={`font-bold ${quiz.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                    {quiz.isCorrect ? 'Correct!' : 'Incorrect'}
+                    {quiz.isCorrect ? 'Correct! 🎉' : 'Incorrect'}
                   </Text>
                   {!quiz.isCorrect && (
                     <View className="mt-1">
@@ -282,29 +412,46 @@ export default function QuizScreen() {
                     </View>
                   )}
                 </View>
-              </View>
+              </Animated.View>
             )}
 
-            {/* Action Button */}
-            <TouchableOpacity
-              onPress={quiz.isAnswered ? nextQuestion : checkAnswer}
-              disabled={!quiz.userAnswer.trim() && !quiz.isAnswered}
-              className={`rounded-xl py-4 flex-row items-center justify-center ${!quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-indigo-300' : 'bg-indigo-500'
-                }`}
-              style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
-            >
-              {quiz.isAnswered ? (
-                <>
-                  <RefreshCw size={20} color="#fff" />
-                  <Text className="text-white font-semibold text-base ml-2">Next</Text>
-                </>
-              ) : (
-                <Text className="text-white font-semibold text-base">Check Answer</Text>
+            {/* Spacer to push buttons down */}
+            <View className="flex-1" />
+
+            {/* Action Buttons */}
+            <View>
+              {/* Main Action Button */}
+              <TouchableOpacity
+                onPress={quiz.isAnswered ? nextQuestion : checkAnswer}
+                disabled={!quiz.userAnswer.trim() && !quiz.isAnswered}
+                className={`rounded-xl py-4 flex-row items-center justify-center ${!quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-indigo-300' : 'bg-indigo-500'
+                  }`}
+                style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
+              >
+                {quiz.isAnswered ? (
+                  <>
+                    <RefreshCw size={20} color="#fff" />
+                    <Text className="text-white font-semibold text-base ml-2">Next</Text>
+                  </>
+                ) : (
+                  <Text className="text-white font-semibold text-base">Check Answer</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Skip Button - Text style below main button */}
+              {!quiz.isAnswered && (
+                <TouchableOpacity
+                  onPress={skipQuestion}
+                  className="py-3 items-center"
+                >
+                  <Text className="text-gray-500 font-medium">Skip this question</Text>
+                </TouchableOpacity>
               )}
-            </TouchableOpacity>
-          </View>
+            </View>
+          </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );
 }
+
