@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
+import { Check, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Dimensions, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -21,11 +22,10 @@ import { WordCard } from '@/components/word-card';
 import { useVocabStore } from '@/store/vocab-store';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3; // Point of no return
-const ANIMATION_THRESHOLD = SCREEN_WIDTH * 0.15; // Visual confirmation hook
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
+const ANIMATION_THRESHOLD = SCREEN_WIDTH * 0.15;
 
 export default function FlashcardsScreen() {
-    // ... imports and setup
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const words = useVocabStore((state) => state.words);
@@ -43,12 +43,11 @@ export default function FlashcardsScreen() {
     const nextCard = words[(currentIndex + 1) % words.length];
     const nextNextCard = words.length > 2 ? words[(currentIndex + 2) % words.length] : null;
 
-    // Go back logic
-    const handleClose = () => {
-        router.back();
-    };
+    // Calculate progress
+    const progress = words.length > 0 ? ((currentIndex % words.length) / words.length) * 100 : 0;
 
-    // Move to next card
+    const handleClose = () => router.back();
+
     const handleNext = () => {
         setCurrentIndex((prev) => prev + 1);
         translateX.value = 0;
@@ -57,41 +56,34 @@ export default function FlashcardsScreen() {
         hasTriggeredHaptic.value = false;
     };
 
-    // Haptic trigger helper
     const triggerImpact = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
-    // Gesture Handler
     const gesture = Gesture.Pan()
         .onUpdate((event) => {
             translateX.value = event.translationX;
-            rotate.value = (event.translationX / SCREEN_WIDTH) * 25;
+            rotate.value = (event.translationX / SCREEN_WIDTH) * 20;
             scale.value = Math.max(0.95, 1 - Math.abs(event.translationX) / (SCREEN_WIDTH * 3));
 
-            // Haptic feedback logic
             if (Math.abs(event.translationX) > SWIPE_THRESHOLD && !hasTriggeredHaptic.value) {
                 hasTriggeredHaptic.value = true;
                 runOnJS(triggerImpact)();
             } else if (Math.abs(event.translationX) < SWIPE_THRESHOLD && hasTriggeredHaptic.value) {
                 hasTriggeredHaptic.value = false;
-                // Optional: trigger distinct haptic when returning to "cancel" zone
-                // runOnJS(triggerImpact)();
             }
         })
         .onEnd((event) => {
             if (Math.abs(event.translationX) > SWIPE_THRESHOLD) {
-                // Swipe detected - move off screen
                 const direction = event.translationX > 0 ? 1 : -1;
                 translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, {}, () => {
                     runOnJS(handleNext)();
                 });
             } else {
-                // Return to center
                 translateX.value = withSpring(0);
                 rotate.value = withSpring(0);
                 scale.value = withSpring(1);
-                hasTriggeredHaptic.value = false; // Reset haptic state if canceled
+                hasTriggeredHaptic.value = false;
             }
         });
 
@@ -104,12 +96,24 @@ export default function FlashcardsScreen() {
         ]
     }));
 
-    // 2nd Card (Index + 1)
-    const nextCardStyle = useAnimatedStyle(() => {
-        const threshold = ANIMATION_THRESHOLD;
-        const inputRange = [-threshold, 0, threshold];
+    // Swipe indicator styles (LEARNED - right swipe)
+    const learnedIndicatorStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1], Extrapolation.CLAMP);
+        return { opacity };
+    });
 
-        const scaleAnim = interpolate(translateX.value, inputRange, [1, 0.95, 1], Extrapolation.CLAMP);
+    // Swipe indicator styles (SKIP - left swipe)
+    const skipIndicatorStyle = useAnimatedStyle(() => {
+        const opacity = interpolate(translateX.value, [-SWIPE_THRESHOLD, 0], [1, 0], Extrapolation.CLAMP);
+        return { opacity };
+    });
+
+    // 2nd card: always visible behind top card, peeks from bottom
+    const nextCardStyle = useAnimatedStyle(() => {
+        const inputRange = [-ANIMATION_THRESHOLD, 0, ANIMATION_THRESHOLD];
+        // At rest: slightly smaller, offset down. When swiping: full size, no offset
+        const scaleAnim = interpolate(translateX.value, inputRange, [1, 0.97, 1], Extrapolation.CLAMP);
+        // Use top offset via translateY - card peeks 12px from bottom at rest
         const translateYAnim = interpolate(translateX.value, inputRange, [0, 12, 0], Extrapolation.CLAMP);
 
         return {
@@ -122,12 +126,11 @@ export default function FlashcardsScreen() {
         };
     });
 
-    // 3rd Card (Index + 2)
+    // 3rd card: deeper in the stack
     const nextNextCardStyle = useAnimatedStyle(() => {
-        const threshold = ANIMATION_THRESHOLD;
-        const inputRange = [-threshold, 0, threshold];
-
-        const scaleAnim = interpolate(translateX.value, inputRange, [0.95, 0.90, 0.95], Extrapolation.CLAMP);
+        const inputRange = [-ANIMATION_THRESHOLD, 0, ANIMATION_THRESHOLD];
+        // At rest: even smaller, further offset. When swiping: rises to 2nd position
+        const scaleAnim = interpolate(translateX.value, inputRange, [0.97, 0.94, 0.97], Extrapolation.CLAMP);
         const translateYAnim = interpolate(translateX.value, inputRange, [12, 24, 12], Extrapolation.CLAMP);
 
         return {
@@ -137,9 +140,10 @@ export default function FlashcardsScreen() {
             top: 0,
             left: 0,
             right: 0,
-            opacity: 0.8,
+            opacity: 0.9,
         };
     });
+
 
     if (words.length === 0) {
         return (
@@ -154,7 +158,7 @@ export default function FlashcardsScreen() {
     }
 
     return (
-        <View className="flex-1 bg-gray-100" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
+        <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
             <Stack.Screen options={{ gestureEnabled: false }} />
 
             <ProgressHeader
@@ -163,11 +167,35 @@ export default function FlashcardsScreen() {
                 onExit={handleClose}
             />
 
+            {/* Progress Bar */}
+            <View className="mx-4 h-1 bg-gray-200 rounded-full overflow-hidden">
+                <View
+                    className="h-full bg-indigo-500 rounded-full"
+                    style={{ width: `${progress}%` }}
+                />
+            </View>
+
+            {/* Swipe Hint Labels */}
+            <View className="flex-row justify-between px-8 mt-6">
+                <Animated.View style={skipIndicatorStyle} className="flex-row items-center">
+                    <View className="bg-orange-100 rounded-full p-2 mr-2">
+                        <X size={16} color="#F97316" />
+                    </View>
+                    <Text className="text-orange-500 font-semibold">Skip</Text>
+                </Animated.View>
+
+                <Animated.View style={learnedIndicatorStyle} className="flex-row items-center">
+                    <Text className="text-green-500 font-semibold">Learned</Text>
+                    <View className="bg-green-100 rounded-full p-2 ml-2">
+                        <Check size={16} color="#22C55E" />
+                    </View>
+                </Animated.View>
+            </View>
+
             {/* Deck Container */}
             <View className="flex-1 items-center justify-center px-4">
-                <View className="w-full relative h-64 justify-center">
+                <View className="w-full relative h-72 justify-center">
 
-                    {/* Deep Background Card (Index + 2) */}
                     {nextNextCard && (
                         <StackedCard
                             card={nextNextCard}
@@ -176,7 +204,6 @@ export default function FlashcardsScreen() {
                         />
                     )}
 
-                    {/* Next Card (Index + 1) */}
                     {words.length > 1 && (
                         <StackedCard
                             card={nextCard}
@@ -185,23 +212,19 @@ export default function FlashcardsScreen() {
                         />
                     )}
 
-                    {/* Top Card (Foreground) */}
                     <GestureDetector gesture={gesture}>
-                        {/* Wrapper logic for top card is slightly different (gesture detector), so keeping explicit View for now or wrapping StackedCard? 
-                            Let's use StackedCard inside Animated.View relative to gesture? 
-                            Actually, StackedCard returns an Animated.View.
-                            So we can wrap StackedCard with GestureDetector.
-                        */}
-
                         <Animated.View style={[topCardStyle, { zIndex: 10 }]} className="w-full relative">
-                            {/* No overlay for top card */}
                             <WordCard card={currentCard} />
                         </Animated.View>
                     </GestureDetector>
 
                 </View>
 
-                <Text className="mt-12 text-gray-400 text-sm">Swipe left or right to move to next card</Text>
+                {/* Instruction */}
+                <View className="mt-8 items-center">
+                    <Text className="text-gray-400 text-sm mb-1">Tap card to flip</Text>
+                    <Text className="text-gray-300 text-xs">Swipe to continue</Text>
+                </View>
             </View>
         </View>
     );

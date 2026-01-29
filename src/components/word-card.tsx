@@ -62,11 +62,11 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
 
     // Only animate if not already in the desired state
     if (isFlipped.value !== targetState) {
-        isFlipped.value = targetState;
-        flipProgress.value = withTiming(targetValue, {
-            duration: 400,
-            easing: Easing.out(Easing.cubic),
-        });
+      isFlipped.value = targetState;
+      flipProgress.value = withTiming(targetValue, {
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+      });
     }
   }, [forcedFlipMode, isFlipped, flipProgress]);
 
@@ -129,7 +129,11 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
         <Animated.View
           style={[
             frontAnimatedStyle,
-            { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' },
+            {
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              borderWidth: 1,
+              borderColor: 'rgba(0, 0, 0, 0.08)'
+            },
           ]}
           className="absolute inset-0 bg-white rounded-2xl p-5 justify-center items-center"
         >
@@ -159,7 +163,12 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
         <Animated.View
           style={[
             backAnimatedStyle,
-            { boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', backgroundColor: '#3B82F6' },
+            {
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+              backgroundColor: '#3B82F6',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.2)'
+            },
           ]}
           className="absolute inset-0 rounded-2xl p-5 justify-center"
         >
@@ -203,15 +212,14 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
               {[0, 1, 2, 3, 4].map((level) => (
                 <View
                   key={level}
-                  className={`w-2 h-2 rounded-full mx-0.5 ${
-                    level < card.masteryLevel ? 'bg-yellow-400' : 'bg-blue-400/40'
-                  }`}
+                  className={`w-2 h-2 rounded-full mx-0.5 ${level < card.masteryLevel ? 'bg-yellow-400' : 'bg-blue-400/40'
+                    }`}
                 />
               ))}
             </View>
           </View>
         </Animated.View>
       </View>
-    </Pressable>
+    </Pressable >
   );
 }
