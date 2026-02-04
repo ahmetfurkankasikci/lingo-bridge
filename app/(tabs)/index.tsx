@@ -9,6 +9,7 @@ import { StatusBar, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddWordModal } from '@/components/add-word-modal';
+import { ReviewStats } from '@/components/review-stats';
 import { WordCard } from '@/components/word-card';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard as WordCardType } from '@/types';
@@ -94,9 +95,8 @@ export default function HomeScreen() {
         {words.length > 0 && (
           <TouchableOpacity
             onPress={handleFlipAll}
-            className={`p-3 rounded-full ${
-              forcedFlipMode === 'back' ? 'bg-indigo-100' : 'bg-gray-100'
-            }`}
+            className={`p-3 rounded-full ${forcedFlipMode === 'back' ? 'bg-indigo-100' : 'bg-gray-100'
+              }`}
           >
             <Repeat
               size={22}
@@ -115,6 +115,7 @@ export default function HomeScreen() {
           renderItem={renderItem}
           extraData={forcedFlipMode} // Ensure re-render when flip state changes
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={<ReviewStats />}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />

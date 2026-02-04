@@ -2,6 +2,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ProgressHeader } from '@/components/progress-header';
 import { PracticeMode, QuestionItem, QuizQuestion } from '@/components/quiz-question';
 import { QuizResults } from '@/components/quiz-results';
+import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -57,7 +58,7 @@ function getRandomMode(): PracticeMode {
 
 export default function QuizScreen() {
   const words = useVocabStore((state) => state.words);
-  const updateWord = useVocabStore((state) => state.updateWord);
+  const recordReview = useVocabStore((state) => state.recordReview);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -82,8 +83,14 @@ export default function QuizScreen() {
   useEffect(() => {
     if (words.length === 0) return;
 
-    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-    const queue = shuffledWords.map((card) => ({
+    // Prioritize due words, then add remaining words
+    const dueWords = getDueWords(words);
+    const sortedDueWords = sortByReviewPriority(dueWords);
+    const nonDueWords = words.filter(w => !dueWords.includes(w));
+    const shuffledNonDue = [...nonDueWords].sort(() => Math.random() - 0.5);
+    const orderedWords = [...sortedDueWords, ...shuffledNonDue];
+
+    const queue = orderedWords.map((card) => ({
       card,
       mode: getRandomMode(),
     }));
@@ -140,8 +147,14 @@ export default function QuizScreen() {
   // Restart quiz
   const restartQuiz = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const shuffledWords = [...words].sort(() => Math.random() - 0.5);
-    const queue = shuffledWords.map((card) => ({
+    // Prioritize due words, then add remaining words
+    const dueWords = getDueWords(words);
+    const sortedDueWords = sortByReviewPriority(dueWords);
+    const nonDueWords = words.filter(w => !dueWords.includes(w));
+    const shuffledNonDue = [...nonDueWords].sort(() => Math.random() - 0.5);
+    const orderedWords = [...sortedDueWords, ...shuffledNonDue];
+
+    const queue = orderedWords.map((card) => ({
       card,
       mode: getRandomMode(),
     }));
@@ -194,12 +207,9 @@ export default function QuizScreen() {
       }
     }
 
-    // Update mastery level
-    const newMastery = correct
-      ? Math.min(currentQuestion.card.masteryLevel + 1, 5)
-      : Math.max(currentQuestion.card.masteryLevel - 1, 0);
-
-    updateWord(currentQuestion.card.id, { masteryLevel: newMastery });
+    // Record SRS review (quality: 5 = correct, 2 = incorrect)
+    const quality = mapResultToQuality(correct);
+    recordReview(currentQuestion.card.id, quality);
 
     // Haptic and animation feedback
     if (correct) {

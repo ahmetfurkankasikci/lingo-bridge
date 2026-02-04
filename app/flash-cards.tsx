@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { Stack, useRouter } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Dimensions, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -19,6 +19,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ProgressHeader } from '@/components/progress-header';
 import { StackedCard } from '@/components/stacked-card';
 import { WordCard } from '@/components/word-card';
+import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -29,6 +30,15 @@ export default function FlashcardsScreen() {
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const words = useVocabStore((state) => state.words);
+    const recordReview = useVocabStore((state) => state.recordReview);
+
+    // Sort words: due words first, then others
+    const sortedWords = useMemo(() => {
+        const dueWords = getDueWords(words);
+        const sortedDue = sortByReviewPriority(dueWords);
+        const nonDue = words.filter(w => !dueWords.includes(w));
+        return [...sortedDue, ...nonDue];
+    }, [words]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -38,17 +48,22 @@ export default function FlashcardsScreen() {
     const rotate = useSharedValue(0);
     const hasTriggeredHaptic = useSharedValue(false);
 
-    // Derived states
-    const currentCard = words[currentIndex % words.length];
-    const nextCard = words[(currentIndex + 1) % words.length];
-    const nextNextCard = words.length > 2 ? words[(currentIndex + 2) % words.length] : null;
+    // Derived states (use sorted words)
+    const currentCard = sortedWords[currentIndex % sortedWords.length];
+    const nextCard = sortedWords[(currentIndex + 1) % sortedWords.length];
+    const nextNextCard = sortedWords.length > 2 ? sortedWords[(currentIndex + 2) % sortedWords.length] : null;
 
     // Calculate progress
-    const progress = words.length > 0 ? ((currentIndex % words.length) / words.length) * 100 : 0;
+    const progress = sortedWords.length > 0 ? ((currentIndex % sortedWords.length) / sortedWords.length) * 100 : 0;
 
     const handleClose = () => router.back();
 
-    const handleNext = () => {
+    const handleSwipe = (isLearned: boolean) => {
+        // Record SRS review: right swipe (learned) = quality 4, left swipe (skip) = quality 2
+        if (currentCard) {
+            const quality = mapResultToQuality(isLearned);
+            recordReview(currentCard.id, quality);
+        }
         setCurrentIndex((prev) => prev + 1);
         translateX.value = 0;
         rotate.value = 0;
@@ -76,8 +91,9 @@ export default function FlashcardsScreen() {
         .onEnd((event) => {
             if (Math.abs(event.translationX) > SWIPE_THRESHOLD) {
                 const direction = event.translationX > 0 ? 1 : -1;
+                const isLearned = direction > 0; // Right swipe = learned
                 translateX.value = withTiming(direction * SCREEN_WIDTH * 1.5, {}, () => {
-                    runOnJS(handleNext)();
+                    runOnJS(handleSwipe)(isLearned);
                 });
             } else {
                 translateX.value = withSpring(0);

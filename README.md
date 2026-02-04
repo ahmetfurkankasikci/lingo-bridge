@@ -15,9 +15,18 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 ### 🃏 Flashcard Deck
 
 - Stacked card interface with depth animations
-- Smooth swipe gestures (Left/Right)
+- Smooth swipe gestures (Left = Skip, Right = Learned)
+- SRS integration: swipes update spaced repetition schedule
+- Due words appear first for optimal learning
 - Haptic feedback on flip and swipe
-- Progress tracking with unified header
+
+### 🔁 Spaced Repetition System (SRS)
+
+- **SM-2 Algorithm**: Optimizes review intervals based on recall quality
+- **Smart Scheduling**: Words you know well appear less frequently
+- **Review Stats Widget**: Shows due count, next review time, and mastery %
+- **Auto-prioritization**: Due words appear first in quiz and flashcards
+- Mastery level auto-updates based on successful reviews
 
 ### 🌉 B1 Bridge
 
@@ -34,17 +43,18 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 
 ### 📝 Practice Mode
 
-- **TR → EN**: See Turkish meaning, type English sentence
+- **TR → EN**: See Turkish meaning, type English word
 - **EN → TR**: See English sentence with highlighted word, type Turkish meaning
 - **Gap Fill**: Fill in the blank with the correct word
-- Score tracking and mastery level updates
+- SRS integration: answers update spaced repetition schedule
+- Due words prioritized in quiz queue
 - Haptic feedback for correct/incorrect answers
 
 ### 🎯 Mastery Tracking
 
 - Visual mastery level indicator (0-5)
+- Auto-updates based on SRS repetition count
 - Track your progress for each word
-- Mastery updates based on practice performance
 
 ## 🛠️ Tech Stack
 
@@ -65,15 +75,18 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 lingo-bridge/
 ├── app/                    # Expo Router pages
 │   ├── (tabs)/            # Tab navigation
-│   │   ├── index.tsx      # Home - vocabulary list
+│   │   ├── index.tsx      # Home - vocabulary list + review stats
 │   │   ├── bridge.tsx     # B1 Bridge - phrase transformer
 │   │   └── practice.tsx   # Practice - quiz modes
+│   ├── quiz.tsx           # Quiz screen with SRS
+│   ├── flash-cards.tsx    # Flashcard deck with SRS
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
 │   ├── components/        # Reusable UI components
-│   │   ├── word-card.tsx       # Flip card logic
+│   │   ├── word-card.tsx       # Flip card with mastery indicator
 │   │   ├── stacked-card.tsx    # Visual stack wrapper
 │   │   ├── progress-header.tsx # Unified progress header
+│   │   ├── review-stats.tsx    # SRS review statistics widget
 │   │   ├── empty-state.tsx     # Unified empty state
 │   │   ├── quiz-question.tsx   # Quiz question rendering
 │   │   ├── quiz-results.tsx    # Quiz completion summary
@@ -82,14 +95,17 @@ lingo-bridge/
 │   │   ├── use-add-word.ts
 │   │   ├── use-transform-to-b1.ts
 │   │   └── use-context-refresh.ts
-│   ├── services/          # API services
-│   │   └── gemini-service.ts
+│   ├── services/          # API & algorithm services
+│   │   ├── gemini-service.ts   # AI content generation
+│   │   └── srs-service.ts      # SM-2 spaced repetition algorithm
 │   ├── store/             # Zustand stores
-│   │   └── vocab-store.ts
+│   │   └── vocab-store.ts      # Vocabulary + SRS state
 │   ├── constants/         # App constants
 │   │   ├── prompts.ts     # AI prompt templates
 │   │   └── config.ts      # Environment config
 │   └── types/             # TypeScript types
+│       ├── word-card.ts   # WordCard + SRSState types
+│       └── ...
 └── .env                   # Environment variables
 ```
 
@@ -142,7 +158,8 @@ npm run ios
 3. **Refresh Context**: Tap the 🔄 icon to get a new example sentence
 4. **Delete Cards**: Tap the 🗑️ icon to remove a word
 5. **B1 Bridge**: Go to Bridge tab, type a simple phrase, and transform it
-6. **Practice**: Go to Practice tab, select a mode, and test your knowledge
+6. **Practice**: Go to Practice tab and start quiz or flashcards
+7. **Review Stats**: Check the widget on home screen for due words
 
 ## 🗺️ Roadmap
 
@@ -151,6 +168,7 @@ npm run ios
 - [x] Phase 3: Context Refresh
 - [x] Phase 4: B1 Bridge (A2 → B1 transformation)
 - [x] Phase 5: Interactive Practice Mode
+- [x] Phase 6: Spaced Repetition System (SM-2)
 
 ## 📄 License
 

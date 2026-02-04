@@ -5,6 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 
 import { geminiService } from '@/services/gemini-service';
+import { getInitialSRSState } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard, WordCardContent } from '@/types';
 
@@ -31,6 +32,7 @@ export function useAddWord(options?: UseAddWordOptions) {
         createdAt: Date.now(),
         lastContextUpdate: Date.now(),
         masteryLevel: 0,
+        srs: getInitialSRSState(), // Initialize SRS state for new words
       };
 
       return newCard;
