@@ -6,13 +6,18 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { storage } from './vocab-store';
 
+export interface StreakResult {
+  increased: boolean;
+  newStreak: number;
+}
+
 interface StreakStore {
   quizStreak: number;
   wordStreak: number;
   lastQuizDate: string | null;
   lastWordDate: string | null;
-  recordQuizCompletion: () => void;
-  recordWordAddition: () => void;
+  recordQuizCompletion: () => StreakResult;
+  recordWordAddition: () => StreakResult;
   checkAndResetStreaks: () => void;
 }
 
@@ -51,37 +56,47 @@ export const useStreakStore = create<StreakStore>()(
       lastQuizDate: null,
       lastWordDate: null,
 
-      recordQuizCompletion: () => {
+      recordQuizCompletion: (): StreakResult => {
         const today = getToday();
         const yesterday = getYesterday();
         const { lastQuizDate, quizStreak } = get();
 
         // Already recorded today
-        if (lastQuizDate === today) return;
+        if (lastQuizDate === today) {
+          return { increased: false, newStreak: quizStreak };
+        }
 
         // Streak continues
         if (lastQuizDate === yesterday) {
-          set({ quizStreak: quizStreak + 1, lastQuizDate: today });
+          const newStreak = quizStreak + 1;
+          set({ quizStreak: newStreak, lastQuizDate: today });
+          return { increased: true, newStreak };
         } else {
           // New streak starts
           set({ quizStreak: 1, lastQuizDate: today });
+          return { increased: true, newStreak: 1 };
         }
       },
 
-      recordWordAddition: () => {
+      recordWordAddition: (): StreakResult => {
         const today = getToday();
         const yesterday = getYesterday();
         const { lastWordDate, wordStreak } = get();
 
         // Already recorded today
-        if (lastWordDate === today) return;
+        if (lastWordDate === today) {
+          return { increased: false, newStreak: wordStreak };
+        }
 
         // Streak continues
         if (lastWordDate === yesterday) {
-          set({ wordStreak: wordStreak + 1, lastWordDate: today });
+          const newStreak = wordStreak + 1;
+          set({ wordStreak: newStreak, lastWordDate: today });
+          return { increased: true, newStreak };
         } else {
           // New streak starts
           set({ wordStreak: 1, lastWordDate: today });
+          return { increased: true, newStreak: 1 };
         }
       },
 

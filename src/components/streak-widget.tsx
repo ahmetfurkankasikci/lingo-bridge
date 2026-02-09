@@ -36,7 +36,7 @@ export function StreakWidget() {
                         <Text className="text-2xl font-bold text-orange-600">{quizStreak}</Text>
                         <Text className="text-orange-400 ml-1">🔥</Text>
                     </View>
-                    <Text className="text-xs text-orange-500 mt-1">Quiz Streak</Text>
+                    <Text className="text-xs text-orange-500 mt-1" numberOfLines={1}>Quiz Streak</Text>
                 </View>
 
                 {/* Divider */}
@@ -51,7 +51,7 @@ export function StreakWidget() {
                         <Text className="text-2xl font-bold text-amber-600">{wordStreak}</Text>
                         <Text className="text-amber-400 ml-1">🔥</Text>
                     </View>
-                    <Text className="text-xs text-amber-500 mt-1">Word Streak</Text>
+                    <Text className="text-xs text-amber-500 mt-1" numberOfLines={1}>Word Streak</Text>
                 </View>
             </View>
         </View>

@@ -2,6 +2,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ProgressHeader } from '@/components/progress-header';
 import { PracticeMode, QuestionItem, QuizQuestion } from '@/components/quiz-question';
 import { QuizResults } from '@/components/quiz-results';
+import { StreakCelebrationModal } from '@/components/streak-celebration-modal';
 import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
 import { useStreakStore } from '@/store/streak-store';
 import { useVocabStore } from '@/store/vocab-store';
@@ -80,6 +81,11 @@ export default function QuizScreen() {
     skippedCount: 0,
     isFinished: false,
   });
+
+  // Streak celebration modal state
+  const [streakModal, setStreakModal] = useState<{ visible: boolean; count: number }>(
+    { visible: false, count: 0 }
+  );
 
   // Generate a shuffled queue and start immediately on mount
   useEffect(() => {
@@ -245,8 +251,11 @@ export default function QuizScreen() {
   // Move to next question or finish
   const nextQuestion = () => {
     if (quiz.currentIndex >= quiz.queue.length - 1) {
-      recordQuizCompletion(); // Track quiz completion for streak
-      setQuiz((prev) => ({ ...prev, isFinished: true }));
+      const result = recordQuizCompletion();
+      if (result.increased) {
+        setStreakModal({ visible: true, count: result.newStreak });
+      }
+      setQuiz((prev) => ({ ...prev, isFinished: true }));;
     } else {
       setQuiz((prev) => ({
         ...prev,
@@ -300,14 +309,22 @@ export default function QuizScreen() {
   // Quiz Finished View
   if (quiz.isFinished) {
     return (
-      <QuizResults
-        correctCount={quiz.correctCount}
-        wrongCount={quiz.wrongCount}
-        skippedCount={quiz.skippedCount}
-        totalCount={quiz.queue.length}
-        onExit={exitQuiz}
-        onRetry={restartQuiz}
-      />
+      <>
+        <QuizResults
+          correctCount={quiz.correctCount}
+          wrongCount={quiz.wrongCount}
+          skippedCount={quiz.skippedCount}
+          totalCount={quiz.queue.length}
+          onExit={exitQuiz}
+          onRetry={restartQuiz}
+        />
+        <StreakCelebrationModal
+          visible={streakModal.visible}
+          onClose={() => setStreakModal({ visible: false, count: 0 })}
+          streakType="quiz"
+          streakCount={streakModal.count}
+        />
+      </>
     );
   }
 

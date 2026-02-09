@@ -56,6 +56,14 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 - Auto-updates based on SRS repetition count
 - Track your progress for each word
 
+### 🔥 Daily Streaks
+
+- **Quiz Streak**: Track consecutive days of completing quizzes
+- **Word Streak**: Track consecutive days of adding words
+- **Streak Widget**: Shows current streaks on home screen
+- **Celebration Modal**: Animated celebration when streak increases
+- Streaks reset if a day is missed
+
 ## 🛠️ Tech Stack
 
 | Category   | Technology                 |
@@ -75,7 +83,7 @@ An AI-powered English learning app designed to help Turkish speakers bridge the 
 lingo-bridge/
 ├── app/                    # Expo Router pages
 │   ├── (tabs)/            # Tab navigation
-│   │   ├── index.tsx      # Home - vocabulary list + review stats
+│   │   ├── index.tsx      # Home - vocabulary list + stats
 │   │   ├── bridge.tsx     # B1 Bridge - phrase transformer
 │   │   └── practice.tsx   # Practice - quiz modes
 │   ├── quiz.tsx           # Quiz screen with SRS
@@ -83,28 +91,32 @@ lingo-bridge/
 │   └── _layout.tsx        # Root layout with providers
 ├── src/
 │   ├── components/        # Reusable UI components
-│   │   ├── word-card.tsx       # Flip card with mastery indicator
-│   │   ├── stacked-card.tsx    # Visual stack wrapper
-│   │   ├── progress-header.tsx # Unified progress header
-│   │   ├── review-stats.tsx    # SRS review statistics widget
-│   │   ├── empty-state.tsx     # Unified empty state
-│   │   ├── quiz-question.tsx   # Quiz question rendering
-│   │   ├── quiz-results.tsx    # Quiz completion summary
+│   │   ├── word-card.tsx
+│   │   ├── stacked-card.tsx
+│   │   ├── progress-header.tsx
+│   │   ├── review-stats.tsx         # SRS stats widget
+│   │   ├── streak-widget.tsx        # Daily streak display
+│   │   ├── streak-celebration-modal.tsx  # Animated celebration
+│   │   ├── empty-state.tsx
+│   │   ├── quiz-question.tsx
+│   │   ├── quiz-results.tsx
 │   │   └── add-word-modal.tsx
 │   ├── hooks/             # Custom React hooks
 │   │   ├── use-add-word.ts
 │   │   ├── use-transform-to-b1.ts
 │   │   └── use-context-refresh.ts
 │   ├── services/          # API & algorithm services
-│   │   ├── gemini-service.ts   # AI content generation
-│   │   └── srs-service.ts      # SM-2 spaced repetition algorithm
+│   │   ├── gemini-service.ts
+│   │   └── srs-service.ts
 │   ├── store/             # Zustand stores
-│   │   └── vocab-store.ts      # Vocabulary + SRS state
+│   │   ├── vocab-store.ts      # Vocabulary + SRS state
+│   │   └── streak-store.ts     # Daily streaks state
 │   ├── constants/         # App constants
-│   │   ├── prompts.ts     # AI prompt templates
-│   │   └── config.ts      # Environment config
+│   │   ├── prompts.ts
+│   │   └── config.ts
 │   └── types/             # TypeScript types
-│       ├── word-card.ts   # WordCard + SRSState types
+│       ├── word-card.ts
+│       ├── streak.ts
 │       └── ...
 └── .env                   # Environment variables
 ```

@@ -3,18 +3,24 @@ import * as Haptics from 'expo-haptics';
 
 import { geminiService } from '@/services/gemini-service';
 import { getInitialSRSState } from '@/services/srs-service';
-import { useStreakStore } from '@/store/streak-store';
+import { StreakResult, useStreakStore } from '@/store/streak-store';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard, WordCardContent } from '@/types';
 
+interface AddWordResult {
+  card: WordCard;
+  streakResult: StreakResult;
+}
+
 interface UseAddWordOptions {
-  onSuccess?: (card: WordCard) => void;
+  onSuccess?: (result: AddWordResult) => void;
   onError?: (error: Error) => void;
 }
 
 /**
  * Hook for adding new vocabulary words.
  * Handles API calls, store updates, and haptic feedback.
+ * Returns streak result for celebration modal.
  */
 export function useAddWord(options?: UseAddWordOptions) {
   const addWord = useVocabStore((state) => state.addWord);
@@ -38,9 +44,9 @@ export function useAddWord(options?: UseAddWordOptions) {
     },
     onSuccess: async (card) => {
       addWord(card);
-      recordWordAddition(); // Track word addition for streak
+      const streakResult = recordWordAddition();
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      options?.onSuccess?.(card);
+      options?.onSuccess?.({ card, streakResult });
     },
     onError: async (error) => {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
