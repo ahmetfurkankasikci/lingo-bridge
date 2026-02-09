@@ -1,11 +1,9 @@
-// Custom hook for adding new vocabulary words
-// Extracts mutation logic from component for better separation of concerns
-
 import { useMutation } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 
 import { geminiService } from '@/services/gemini-service';
 import { getInitialSRSState } from '@/services/srs-service';
+import { useStreakStore } from '@/store/streak-store';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard, WordCardContent } from '@/types';
 
@@ -20,6 +18,7 @@ interface UseAddWordOptions {
  */
 export function useAddWord(options?: UseAddWordOptions) {
   const addWord = useVocabStore((state) => state.addWord);
+  const recordWordAddition = useStreakStore((state) => state.recordWordAddition);
 
   return useMutation({
     mutationFn: async (word: string): Promise<WordCard> => {
@@ -32,13 +31,14 @@ export function useAddWord(options?: UseAddWordOptions) {
         createdAt: Date.now(),
         lastContextUpdate: Date.now(),
         masteryLevel: 0,
-        srs: getInitialSRSState(), // Initialize SRS state for new words
+        srs: getInitialSRSState(),
       };
 
       return newCard;
     },
     onSuccess: async (card) => {
       addWord(card);
+      recordWordAddition(); // Track word addition for streak
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       options?.onSuccess?.(card);
     },

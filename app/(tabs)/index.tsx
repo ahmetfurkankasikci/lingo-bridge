@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddWordModal } from '@/components/add-word-modal';
 import { ReviewStats } from '@/components/review-stats';
+import { StreakWidget } from '@/components/streak-widget';
 import { WordCard } from '@/components/word-card';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard as WordCardType } from '@/types';
@@ -115,7 +116,12 @@ export default function HomeScreen() {
           renderItem={renderItem}
           extraData={forcedFlipMode} // Ensure re-render when flip state changes
           keyExtractor={(item) => item.id}
-          ListHeaderComponent={<ReviewStats />}
+          ListHeaderComponent={
+            <>
+              <StreakWidget />
+              <ReviewStats />
+            </>
+          }
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />

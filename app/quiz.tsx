@@ -3,6 +3,7 @@ import { ProgressHeader } from '@/components/progress-header';
 import { PracticeMode, QuestionItem, QuizQuestion } from '@/components/quiz-question';
 import { QuizResults } from '@/components/quiz-results';
 import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
+import { useStreakStore } from '@/store/streak-store';
 import { useVocabStore } from '@/store/vocab-store';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -59,6 +60,7 @@ function getRandomMode(): PracticeMode {
 export default function QuizScreen() {
   const words = useVocabStore((state) => state.words);
   const recordReview = useVocabStore((state) => state.recordReview);
+  const recordQuizCompletion = useStreakStore((state) => state.recordQuizCompletion);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -243,6 +245,7 @@ export default function QuizScreen() {
   // Move to next question or finish
   const nextQuestion = () => {
     if (quiz.currentIndex >= quiz.queue.length - 1) {
+      recordQuizCompletion(); // Track quiz completion for streak
       setQuiz((prev) => ({ ...prev, isFinished: true }));
     } else {
       setQuiz((prev) => ({
