@@ -53,6 +53,14 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
   // Delete function from store
   const removeWord = useVocabStore((state) => state.removeWord);
 
+  // Auto-hide the refresh error after a few seconds so the mastery row returns
+  const { isError: isRefreshError, reset: resetRefresh } = refreshMutation;
+  useEffect(() => {
+    if (!isRefreshError) return;
+    const timer = setTimeout(resetRefresh, 4000);
+    return () => clearTimeout(timer);
+  }, [isRefreshError, resetRefresh]);
+
   // Handle programmatic flip
   useEffect(() => {
     if (!forcedFlipMode) return;
@@ -204,20 +212,31 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
             {renderSentenceWithBoldMarkers(card.content.exampleSentence)}
           </Text>
 
-          {/* Mastery Level Indicator */}
-          <View className="flex-row items-center justify-center mt-4">
-            <Text className="text-xs text-blue-200 mr-2">Mastery:</Text>
-            <View className="flex-row">
-              {/* Render 5 dots for mastery level */}
-              {[0, 1, 2, 3, 4].map((level) => (
-                <View
-                  key={level}
-                  className={`w-2 h-2 rounded-full mx-0.5 ${level < card.masteryLevel ? 'bg-yellow-400' : 'bg-blue-400/40'
-                    }`}
-                />
-              ))}
+          {/* Refresh error replaces the mastery row until it auto-hides */}
+          {refreshMutation.isError ? (
+            <View className="mt-4 px-3 py-1.5 bg-red-500/90 rounded-lg self-center">
+              <Text className="text-xs text-white text-center" numberOfLines={2}>
+                {refreshMutation.error instanceof Error
+                  ? refreshMutation.error.message
+                  : 'Failed to refresh sentence'}
+              </Text>
             </View>
-          </View>
+          ) : (
+            /* Mastery Level Indicator */
+            <View className="flex-row items-center justify-center mt-4">
+              <Text className="text-xs text-blue-200 mr-2">Mastery:</Text>
+              <View className="flex-row">
+                {/* Render 5 dots for mastery level */}
+                {[0, 1, 2, 3, 4].map((level) => (
+                  <View
+                    key={level}
+                    className={`w-2 h-2 rounded-full mx-0.5 ${level < card.masteryLevel ? 'bg-yellow-400' : 'bg-blue-400/40'
+                      }`}
+                  />
+                ))}
+              </View>
+            </View>
+          )}
         </Animated.View>
       </View>
     </Pressable >

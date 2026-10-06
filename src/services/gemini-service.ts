@@ -59,6 +59,10 @@ class GeminiService {
    * @returns The generated text response
    */
   async generateContent(prompt: string): Promise<string> {
+    if (!Config.geminiApiKey) {
+      throw new Error('AI features are unavailable: Gemini API key is not configured.');
+    }
+
     const response = await fetch(
       `${GEMINI_API_URL}/models/gemini-2.5-flash:generateContent?key=${Config.geminiApiKey}`,
       {
