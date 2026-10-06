@@ -19,7 +19,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ProgressHeader } from '@/components/progress-header';
 import { StackedCard } from '@/components/stacked-card';
 import { WordCard } from '@/components/word-card';
-import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
+import { mapResultToQuality, orderWordsForReview } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -33,12 +33,7 @@ export default function FlashcardsScreen() {
     const recordReview = useVocabStore((state) => state.recordReview);
 
     // Sort words: due words first, then others
-    const sortedWords = useMemo(() => {
-        const dueWords = getDueWords(words);
-        const sortedDue = sortByReviewPriority(dueWords);
-        const nonDue = words.filter(w => !dueWords.includes(w));
-        return [...sortedDue, ...nonDue];
-    }, [words]);
+    const sortedWords = useMemo(() => orderWordsForReview(words), [words]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
 

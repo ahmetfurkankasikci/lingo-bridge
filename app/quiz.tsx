@@ -3,9 +3,10 @@ import { ProgressHeader } from '@/components/progress-header';
 import { PracticeMode, QuestionItem, QuizQuestion } from '@/components/quiz-question';
 import { QuizResults } from '@/components/quiz-results';
 import { StreakCelebrationModal } from '@/components/streak-celebration-modal';
-import { getDueWords, mapResultToQuality, sortByReviewPriority } from '@/services/srs-service';
+import { mapResultToQuality, orderWordsForReview } from '@/services/srs-service';
 import { useStreakStore } from '@/store/streak-store';
 import { useVocabStore } from '@/store/vocab-store';
+import type { WordCard } from '@/types';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Check, RefreshCw, SkipForward, X } from 'lucide-react-native';
@@ -52,10 +53,41 @@ function extractTargetWord(sentence: string): string {
   return match ? match[1] : '';
 }
 
+// Normalize an answer for comparison.
+// Turkish-aware lowercasing (İ→i, I→ı), then fold ı→i so answers match
+// regardless of keyboard layout (e.g. "Ilık", "ılık", "ilik" all compare equal).
+function normalizeAnswer(text: string): string {
+  return text.normalize('NFC').trim().toLocaleLowerCase('tr-TR').replace(/ı/g, 'i');
+}
+
 // Get random mode
 function getRandomMode(): PracticeMode {
   const modes: PracticeMode[] = ['tr-to-en', 'en-to-tr', 'gap-fill'];
   return modes[Math.floor(Math.random() * modes.length)];
+}
+
+// Build a question queue: due words first (by priority), the rest shuffled
+function buildQueue(words: WordCard[]): QuestionItem[] {
+  return orderWordsForReview(words, true).map((card) => ({
+    card,
+    mode: getRandomMode(),
+  }));
+}
+
+// Fresh, started quiz state for the given queue
+function createQuizState(queue: QuestionItem[]): QuizState {
+  return {
+    isStarted: true,
+    queue,
+    currentIndex: 0,
+    userAnswer: '',
+    isAnswered: false,
+    isCorrect: false,
+    correctCount: 0,
+    wrongCount: 0,
+    skippedCount: 0,
+    isFinished: false,
+  };
 }
 
 export default function QuizScreen() {
@@ -69,18 +101,7 @@ export default function QuizScreen() {
   // Animation values
   const shakeX = useSharedValue(0);
 
-  const [quiz, setQuiz] = useState<QuizState>({
-    isStarted: false,
-    queue: [],
-    currentIndex: 0,
-    userAnswer: '',
-    isAnswered: false,
-    isCorrect: false,
-    correctCount: 0,
-    wrongCount: 0,
-    skippedCount: 0,
-    isFinished: false,
-  });
+  const [quiz, setQuiz] = useState<QuizState>({ ...createQuizState([]), isStarted: false });
 
   // Streak celebration modal state
   const [streakModal, setStreakModal] = useState<{ visible: boolean; count: number }>(
@@ -91,30 +112,7 @@ export default function QuizScreen() {
   useEffect(() => {
     if (words.length === 0) return;
 
-    // Prioritize due words, then add remaining words
-    const dueWords = getDueWords(words);
-    const sortedDueWords = sortByReviewPriority(dueWords);
-    const nonDueWords = words.filter(w => !dueWords.includes(w));
-    const shuffledNonDue = [...nonDueWords].sort(() => Math.random() - 0.5);
-    const orderedWords = [...sortedDueWords, ...shuffledNonDue];
-
-    const queue = orderedWords.map((card) => ({
-      card,
-      mode: getRandomMode(),
-    }));
-
-    setQuiz({
-      isStarted: true,
-      queue,
-      currentIndex: 0,
-      userAnswer: '',
-      isAnswered: false,
-      isCorrect: false,
-      correctCount: 0,
-      wrongCount: 0,
-      skippedCount: 0,
-      isFinished: false,
-    });
+    setQuiz(createQuizState(buildQueue(words)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -155,30 +153,7 @@ export default function QuizScreen() {
   // Restart quiz
   const restartQuiz = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // Prioritize due words, then add remaining words
-    const dueWords = getDueWords(words);
-    const sortedDueWords = sortByReviewPriority(dueWords);
-    const nonDueWords = words.filter(w => !dueWords.includes(w));
-    const shuffledNonDue = [...nonDueWords].sort(() => Math.random() - 0.5);
-    const orderedWords = [...sortedDueWords, ...shuffledNonDue];
-
-    const queue = orderedWords.map((card) => ({
-      card,
-      mode: getRandomMode(),
-    }));
-
-    setQuiz({
-      isStarted: true,
-      queue,
-      currentIndex: 0,
-      userAnswer: '',
-      isAnswered: false,
-      isCorrect: false,
-      correctCount: 0,
-      wrongCount: 0,
-      skippedCount: 0,
-      isFinished: false,
-    });
+    setQuiz(createQuizState(buildQueue(words)));
   };
 
   // Check the answer
@@ -190,13 +165,13 @@ export default function QuizScreen() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     let correct = false;
-    const userAnswer = quiz.userAnswer.trim().toLowerCase();
-    const targetWord = extractTargetWord(currentQuestion.card.content.exampleSentence).toLowerCase();
-    const baseWord = currentQuestion.card.word.toLowerCase();
+    const userAnswer = quiz.userAnswer;
+    const targetWord = extractTargetWord(currentQuestion.card.content.exampleSentence);
+    const baseWord = currentQuestion.card.word;
 
     const checkMatch = (user: string, ...targets: string[]) => {
-      const normalizedUser = user.trim().toLowerCase();
-      const allTargets = targets.flatMap(t => t.split(/[,;]/).map(s => s.trim().toLowerCase()));
+      const normalizedUser = normalizeAnswer(user);
+      const allTargets = targets.flatMap(t => t.split(/[,;]/).map(normalizeAnswer));
       return allTargets.includes(normalizedUser);
     };
 
@@ -255,7 +230,7 @@ export default function QuizScreen() {
       if (result.increased) {
         setStreakModal({ visible: true, count: result.newStreak });
       }
-      setQuiz((prev) => ({ ...prev, isFinished: true }));;
+      setQuiz((prev) => ({ ...prev, isFinished: true }));
     } else {
       setQuiz((prev) => ({
         ...prev,
@@ -290,7 +265,7 @@ export default function QuizScreen() {
       const base = currentQuestion.card.word;
       return (
         <Text className="text-lg font-bold text-gray-900">
-          {target} {target.toLowerCase() !== base.toLowerCase() ? `(or ${base})` : ''}
+          {target} {normalizeAnswer(target) !== normalizeAnswer(base) ? `(or ${base})` : ''}
         </Text>
       );
     }

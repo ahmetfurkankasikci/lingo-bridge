@@ -16,6 +16,31 @@ interface GeminiResponse {
   }[];
 }
 
+/**
+ * Strips markdown code fences from a Gemini response and parses it as JSON.
+ * Throws if parsing fails or any of the required fields is missing.
+ */
+function parseJsonResponse<T>(responseText: string, requiredFields: (keyof T)[], label: string): T {
+  const cleanedResponse = responseText
+    .replace(/```json\n?/g, '') // Remove ```json
+    .replace(/```\n?/g, '') // Remove ```
+    .trim();
+
+  try {
+    const parsed = JSON.parse(cleanedResponse) as T;
+
+    const missing = requiredFields.filter((field) => !parsed[field]);
+    if (missing.length > 0) {
+      throw new Error(`Missing fields in ${label} response: ${missing.join(', ')}`);
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error(`Failed to parse ${label} response:`, cleanedResponse, error);
+    throw new Error('Invalid response format from Gemini API');
+  }
+}
+
 class GeminiService {
   private static instance: GeminiService;
 
@@ -78,25 +103,7 @@ class GeminiService {
     // Call Gemini API
     const responseText = await this.generateContent(prompt);
 
-    // Parse JSON response (remove any markdown formatting if present)
-    const cleanedResponse = responseText
-      .replace(/```json\n?/g, '') // Remove ```json
-      .replace(/```\n?/g, '') // Remove ```
-      .trim();
-
-    try {
-      const parsed: WordCardContent = JSON.parse(cleanedResponse);
-
-      // Validate required fields
-      if (!parsed.meaningTr || !parsed.exampleSentence) {
-        throw new Error('Missing required fields in Gemini response');
-      }
-
-      return parsed;
-    } catch (error) {
-      console.error('Failed to parse Gemini response:', cleanedResponse, error);
-      throw new Error('Invalid response format from Gemini API');
-    }
+    return parseJsonResponse<WordCardContent>(responseText, ['meaningTr', 'exampleSentence'], 'word card');
   }
 
   /**
@@ -113,24 +120,12 @@ class GeminiService {
     // Call Gemini API
     const responseText = await this.generateContent(prompt);
 
-    // Parse JSON response
-    const cleanedResponse = responseText
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    try {
-      const parsed = JSON.parse(cleanedResponse) as { exampleSentence: string };
-
-      if (!parsed.exampleSentence) {
-        throw new Error('Missing exampleSentence in Gemini response');
-      }
-
-      return parsed.exampleSentence;
-    } catch (error) {
-      console.error('Failed to parse regeneration response:', cleanedResponse, error);
-      throw new Error('Invalid response format from Gemini API');
-    }
+    const parsed = parseJsonResponse<{ exampleSentence: string }>(
+      responseText,
+      ['exampleSentence'],
+      'context regeneration'
+    );
+    return parsed.exampleSentence;
   }
 
   /**
@@ -145,24 +140,7 @@ class GeminiService {
     // Call Gemini API
     const responseText = await this.generateContent(prompt);
 
-    // Parse JSON response
-    const cleanedResponse = responseText
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    try {
-      const parsed = JSON.parse(cleanedResponse) as B1BridgeResult;
-
-      if (!parsed.b1Phrase || !parsed.explanation) {
-        throw new Error('Missing fields in B1 Bridge response');
-      }
-
-      return parsed;
-    } catch (error) {
-      console.error('Failed to parse B1 Bridge response:', cleanedResponse, error);
-      throw new Error('Invalid response format from Gemini API');
-    }
+    return parseJsonResponse<B1BridgeResult>(responseText, ['b1Phrase', 'explanation'], 'B1 Bridge');
   }
 }
 

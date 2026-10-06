@@ -1,15 +1,13 @@
 // Phase 1: State Management & Persistence
 // This file creates a Zustand store with MMKV persistence for vocabulary management
 
-import { createMMKV } from 'react-native-mmkv';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { calculateNextReview, getInitialSRSState, type ReviewQuality } from '@/services/srs-service';
 import type { WordCard } from '@/types';
 
-// Initialize MMKV for high-performance local storage
-export const storage = createMMKV();
+import { zustandStorage } from './mmkv-storage';
 
 // Store interface defining state and actions
 interface VocabState {
@@ -20,21 +18,6 @@ interface VocabState {
   getWord: (id: string) => WordCard | undefined; // Retrieve single word by ID
   recordReview: (id: string, quality: ReviewQuality) => void; // Record SRS review result
 }
-
-// Adapter to make MMKV compatible with Zustand's persist middleware
-const zustandStorage = {
-  setItem: (name: string, value: string) => {
-    storage.set(name, value); // Save JSON string to MMKV
-  },
-  getItem: (name: string) => {
-    const value = storage.getString(name); // Retrieve JSON string from MMKV
-    return value ?? null; // Return null if not found (Zustand expects this)
-  },
-  removeItem: (name: string) => {
-    storage.remove(name); // Delete from MMKV
-    return Promise.resolve(); // Zustand expects a Promise
-  },
-};
 
 /**
  * Migrates existing words to include SRS state

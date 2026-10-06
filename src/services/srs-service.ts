@@ -118,6 +118,20 @@ export function sortByReviewPriority<T extends { srs: SRSState }>(words: T[]): T
 }
 
 /**
+ * Orders words for a review session: due words first (by priority),
+ * followed by the remaining words (optionally shuffled)
+ */
+export function orderWordsForReview<T extends { srs: SRSState }>(
+  words: T[],
+  shuffleNonDue: boolean = false
+): T[] {
+  const dueWords = getDueWords(words);
+  const nonDueWords = words.filter((w) => !dueWords.includes(w));
+  const rest = shuffleNonDue ? [...nonDueWords].sort(() => Math.random() - 0.5) : nonDueWords;
+  return [...sortByReviewPriority(dueWords), ...rest];
+}
+
+/**
  * Maps quiz/flashcard results to quality ratings
  */
 export function mapResultToQuality(isCorrect: boolean, wasHesitant: boolean = false): ReviewQuality {

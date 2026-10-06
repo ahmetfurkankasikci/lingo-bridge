@@ -4,7 +4,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { storage } from './vocab-store';
+import { zustandStorage } from './mmkv-storage';
 
 export interface StreakResult {
   increased: boolean;
@@ -21,32 +21,26 @@ interface StreakStore {
   checkAndResetStreaks: () => void;
 }
 
+// Format a date as YYYY-MM-DD in the device's local timezone
+// (toISOString would use UTC and shift the day for e.g. UTC+3 users after midnight)
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Get today's date in YYYY-MM-DD format
 function getToday(): string {
-  return new Date().toISOString().split('T')[0];
+  return toLocalDateString(new Date());
 }
 
 // Get yesterday's date in YYYY-MM-DD format
 function getYesterday(): string {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  return yesterday.toISOString().split('T')[0];
+  return toLocalDateString(yesterday);
 }
-
-// Zustand storage adapter for MMKV
-const zustandStorage = {
-  setItem: (name: string, value: string) => {
-    storage.set(name, value);
-  },
-  getItem: (name: string) => {
-    const value = storage.getString(name);
-    return value ?? null;
-  },
-  removeItem: (name: string) => {
-    storage.remove(name);
-    return Promise.resolve();
-  },
-};
 
 export const useStreakStore = create<StreakStore>()(
   persist(
