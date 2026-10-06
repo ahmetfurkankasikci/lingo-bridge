@@ -1,6 +1,7 @@
 import { X } from 'lucide-react-native';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { colors } from '@/constants/theme';
 
 interface ProgressHeaderProps {
     current: number;
@@ -16,7 +17,7 @@ export function ProgressHeader({ current, total, onExit }: ProgressHeaderProps) 
                 className="bg-gray-200 p-2 rounded-full"
                 style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}
             >
-                <X size={20} color="#374151" />
+                <X size={20} color={colors.icon} />
             </TouchableOpacity>
 
             <Text className="text-gray-500 font-semibold text-lg">

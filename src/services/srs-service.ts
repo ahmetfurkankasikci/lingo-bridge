@@ -149,14 +149,14 @@ export function getTimeUntilReview(srs: SRSState): string {
   const diff = srs.nextReviewDate - now;
   
   if (diff <= 0) {
-    return 'Due now';
+    return 'Şimdi';
   }
   
   const days = Math.floor(diff / (24 * 60 * 60 * 1000));
   const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
   
   if (days > 0) {
-    return `${days} day${days !== 1 ? 's' : ''}`;
+    return `${days} gün`;
   }
-  return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  return hours > 0 ? `${hours} saat` : '1 saatten az';
 }

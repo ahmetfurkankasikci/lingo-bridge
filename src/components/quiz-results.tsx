@@ -13,6 +13,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, shadows } from '@/constants/theme';
 
 interface QuizResultsProps {
     correctCount: number;
@@ -25,11 +26,11 @@ interface QuizResultsProps {
 
 // Get motivational message based on score
 function getMotivationalMessage(percentage: number): { emoji: string; message: string } {
-    if (percentage >= 90) return { emoji: '🏆', message: 'Outstanding! You\'re a master!' };
-    if (percentage >= 75) return { emoji: '🌟', message: 'Great job! Keep it up!' };
-    if (percentage >= 50) return { emoji: '💪', message: 'Good effort! Practice makes perfect.' };
-    if (percentage >= 25) return { emoji: '📚', message: 'Keep studying! You\'ll get there.' };
-    return { emoji: '🎯', message: 'Don\'t give up! Try again.' };
+    if (percentage >= 90) return { emoji: '🏆', message: 'Muhteşem! Tam bir usta oldun!' };
+    if (percentage >= 75) return { emoji: '🌟', message: 'Harika iş! Böyle devam et!' };
+    if (percentage >= 50) return { emoji: '💪', message: 'İyi gidiyorsun! Pratik mükemmelleştirir.' };
+    if (percentage >= 25) return { emoji: '📚', message: 'Çalışmaya devam! Oraya varacaksın.' };
+    return { emoji: '🎯', message: 'Pes etme! Bir daha dene.' };
 }
 
 export function QuizResults({
@@ -82,7 +83,7 @@ export function QuizResults({
 
     return (
         <View
-            className="flex-1 bg-gradient-to-b from-indigo-50 to-white items-center justify-center p-4"
+            className="flex-1 bg-gray-50 items-center justify-center p-4"
             style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
         >
             {/* Confetti Cannon for high scores */}
@@ -95,7 +96,7 @@ export function QuizResults({
                     fadeOut={true}
                     fallSpeed={2500}
                     explosionSpeed={350}
-                    colors={['#6366F1', '#22C55E', '#F59E0B', '#EF4444', '#EC4899', '#3B82F6']}
+                    colors={[colors.primary[500], colors.success, colors.accent[500], colors.danger, colors.primary[300], colors.accent[300]]}
                 />
             )}
 
@@ -111,7 +112,7 @@ export function QuizResults({
                 entering={FadeIn.delay(200).duration(300)}
                 className="text-3xl font-bold text-gray-900 mb-2 text-center"
             >
-                Quiz Complete!
+                Quiz Tamamlandı!
             </Animated.Text>
 
             <Animated.Text
@@ -123,16 +124,16 @@ export function QuizResults({
 
             {/* Score Card */}
             <Animated.View
-                style={[scoreCardStyle, { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }]}
+                style={[scoreCardStyle, { boxShadow: shadows.raised }]}
                 className="bg-white rounded-3xl p-8 mb-6 w-full items-center"
             >
                 {/* Main Score */}
-                <Text className="text-gray-400 text-base mb-1">Your Score</Text>
-                <Text className="text-6xl font-bold text-indigo-600 mb-1">
-                    {percentage}%
+                <Text className="text-gray-400 text-base mb-1">Skorun</Text>
+                <Text className="text-6xl font-bold text-primary-600 mb-1">
+                    %{percentage}
                 </Text>
                 <Text className="text-gray-500 mb-6">
-                    {correctCount} of {totalCount} correct
+                    {totalCount} sorudan {correctCount} doğru
                 </Text>
 
                 {/* Breakdown */}
@@ -140,27 +141,27 @@ export function QuizResults({
                     <View className="flex-row justify-around">
                         <View className="items-center">
                             <View className="flex-row items-center mb-1">
-                                <Check size={18} color="#22C55E" />
+                                <Check size={18} color={colors.success} />
                                 <Text className="text-2xl font-bold text-green-600 ml-1">{correctCount}</Text>
                             </View>
-                            <Text className="text-xs text-gray-400">Correct</Text>
+                            <Text className="text-xs text-gray-400">Doğru</Text>
                         </View>
 
                         <View className="items-center">
                             <View className="flex-row items-center mb-1">
-                                <X size={18} color="#EF4444" />
+                                <X size={18} color={colors.danger} />
                                 <Text className="text-2xl font-bold text-red-500 ml-1">{wrongCount}</Text>
                             </View>
-                            <Text className="text-xs text-gray-400">Wrong</Text>
+                            <Text className="text-xs text-gray-400">Yanlış</Text>
                         </View>
 
                         {skippedCount > 0 && (
                             <View className="items-center">
                                 <View className="flex-row items-center mb-1">
-                                    <SkipForward size={18} color="#9CA3AF" />
+                                    <SkipForward size={18} color={colors.textSubtle} />
                                     <Text className="text-2xl font-bold text-gray-400 ml-1">{skippedCount}</Text>
                                 </View>
-                                <Text className="text-xs text-gray-400">Skipped</Text>
+                                <Text className="text-xs text-gray-400">Atlanan</Text>
                             </View>
                         )}
                     </View>
@@ -177,17 +178,17 @@ export function QuizResults({
                     onPress={onExit}
                     className="flex-1 bg-gray-200 rounded-2xl py-4 mr-2"
                 >
-                    <Text className="text-gray-700 font-semibold text-base text-center">Back</Text>
+                    <Text className="text-gray-700 font-semibold text-base text-center">Geri</Text>
                 </TouchableOpacity>
 
                 {/* Try Again */}
                 <TouchableOpacity
                     onPress={onRetry}
-                    className="flex-1 bg-indigo-500 rounded-2xl py-4 ml-2 flex-row items-center justify-center"
-                    style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
+                    className="flex-1 bg-primary-500 rounded-2xl py-4 ml-2 flex-row items-center justify-center"
+                    style={{ boxShadow: shadows.primary }}
                 >
-                    <RefreshCw size={18} color="#fff" />
-                    <Text className="text-white font-semibold text-base ml-2">Try Again</Text>
+                    <RefreshCw size={18} color={colors.white} />
+                    <Text className="text-white font-semibold text-base ml-2">Tekrar Dene</Text>
                 </TouchableOpacity>
             </Animated.View>
 

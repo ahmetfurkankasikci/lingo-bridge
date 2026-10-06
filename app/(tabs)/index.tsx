@@ -6,12 +6,14 @@ import * as Haptics from 'expo-haptics';
 import { BookOpen, Plus, Repeat } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { StatusBar, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AddWordModal } from '@/components/add-word-modal';
 import { ReviewStats } from '@/components/review-stats';
 import { StreakWidget } from '@/components/streak-widget';
+import { Screen } from '@/components/ui/screen';
+import { ScreenHeader } from '@/components/ui/screen-header';
 import { WordCard } from '@/components/word-card';
+import { colors, shadows } from '@/constants/theme';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard as WordCardType } from '@/types';
 
@@ -51,61 +53,59 @@ export default function HomeScreen() {
   const EmptyState = () => (
     <View className="flex-1 items-center justify-center px-8">
       {/* Icon */}
-      <View className="bg-blue-50 p-6 rounded-full mb-6">
-        <BookOpen size={48} color="#3B82F6" />
+      <View className="bg-primary-50 p-6 rounded-full mb-6">
+        <BookOpen size={48} color={colors.primary[500]} />
       </View>
 
       {/* Title */}
       <Text className="text-2xl font-bold text-gray-900 text-center mb-2">
-        No words yet
+        Henüz kelime yok
       </Text>
 
       {/* Description */}
       <Text className="text-gray-500 text-center text-base leading-relaxed">
-        Start building your vocabulary by adding your first English word. AI will
-        generate Turkish meanings and daily-life example sentences.
+        İlk İngilizce kelimeni ekleyerek başla. Yapay zekâ Türkçe anlamını ve günlük
+        hayattan bir örnek cümle oluşturacak.
       </Text>
 
       {/* CTA Button */}
       <TouchableOpacity
         onPress={handleOpenModal}
-        className="mt-8 bg-blue-500 px-8 py-4 rounded-xl"
-        style={{ boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)' }}
+        className="mt-8 bg-primary-500 px-8 py-4 rounded-xl"
+        style={{ boxShadow: shadows.primary }}
       >
-        <Text className="text-white font-semibold text-base">Add Your First Word</Text>
+        <Text className="text-white font-semibold text-base">İlk Kelimeni Ekle</Text>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
+    <Screen>
       <StatusBar barStyle="dark-content" />
 
-      {/* Header */}
-      <View className="px-5 py-4 border-b border-gray-100 bg-white flex-row justify-between items-center">
-        <View>
-          <Text className="text-2xl font-bold text-gray-900">Lingo Bridge</Text>
-          <Text className="text-sm text-gray-500 mt-1">
-            {words.length > 0
-              ? `${words.length} word${words.length > 1 ? 's' : ''} in your vocabulary`
-              : 'Your daily vocabulary companion'}
-          </Text>
-        </View>
-
-        {/* Flip All Button */}
-        {words.length > 0 && (
-          <TouchableOpacity
-            onPress={handleFlipAll}
-            className={`p-3 rounded-full ${forcedFlipMode === 'back' ? 'bg-indigo-100' : 'bg-gray-100'
-              }`}
-          >
-            <Repeat
-              size={22}
-              color={forcedFlipMode === 'back' ? '#4F46E5' : '#6B7280'}
-            />
-          </TouchableOpacity>
-        )}
-      </View>
+      <ScreenHeader
+        title="Lingo Bridge"
+        subtitle={
+          words.length > 0
+            ? `Kelime hazinende ${words.length} kelime var`
+            : 'Günlük kelime arkadaşın'
+        }
+        right={
+          // Flip All Button
+          words.length > 0 && (
+            <TouchableOpacity
+              onPress={handleFlipAll}
+              className={`p-3 rounded-full ${forcedFlipMode === 'back' ? 'bg-primary-100' : 'bg-white'}`}
+              style={{ boxShadow: shadows.card }}
+            >
+              <Repeat
+                size={22}
+                color={forcedFlipMode === 'back' ? colors.primary[600] : colors.textMuted}
+              />
+            </TouchableOpacity>
+          )
+        }
+      />
 
       {/* Word List or Empty State */}
       {words.length === 0 ? (
@@ -122,7 +122,7 @@ export default function HomeScreen() {
               <ReviewStats />
             </>
           }
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 100 }}
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -131,10 +131,10 @@ export default function HomeScreen() {
       {words.length > 0 && (
         <TouchableOpacity
           onPress={handleOpenModal}
-          className="absolute bottom-6 right-6 bg-blue-500 w-16 h-16 rounded-full items-center justify-center"
-          style={{ boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)' }}
+          className="absolute bottom-6 right-6 bg-primary-500 w-16 h-16 rounded-full items-center justify-center"
+          style={{ boxShadow: shadows.primary }}
         >
-          <Plus size={28} color="#fff" />
+          <Plus size={28} color={colors.white} />
         </TouchableOpacity>
       )}
 
@@ -143,6 +143,6 @@ export default function HomeScreen() {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }

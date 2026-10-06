@@ -5,6 +5,8 @@ import { Calendar, Clock, Zap } from 'lucide-react-native';
 import React from 'react';
 import { Text, View } from 'react-native';
 
+import { Card } from '@/components/ui/card';
+import { colors } from '@/constants/theme';
 import { getDueWords, getTimeUntilReview } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
 
@@ -33,45 +35,45 @@ export function ReviewStats() {
     }
 
     return (
-        <View className="mx-4 mb-4 bg-white rounded-2xl p-4" style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-            <Text className="text-sm font-semibold text-gray-500 mb-3">Review Stats</Text>
+        <Card className="mb-4">
+            <Text className="text-sm font-semibold text-gray-500 mb-3">Tekrar Durumu</Text>
 
             <View className="flex-row justify-between">
                 {/* Due Today */}
                 <View className="items-center flex-1">
-                    <View className="bg-indigo-100 rounded-full p-2 mb-2">
-                        <Clock size={18} color="#6366F1" />
+                    <View className="bg-primary-100 rounded-full p-2 mb-2">
+                        <Clock size={18} color={colors.primary[500]} />
                     </View>
                     <View className="h-7 justify-center">
                         <Text className="text-xl font-bold text-gray-900">{dueCount}</Text>
                     </View>
-                    <Text className="text-xs text-gray-500 mt-1">Due Now</Text>
+                    <Text className="text-xs text-gray-500 mt-1">Tekrar bekleyen</Text>
                 </View>
 
                 {/* Next Review */}
                 <View className="items-center flex-1">
-                    <View className="bg-blue-100 rounded-full p-2 mb-2">
-                        <Calendar size={18} color="#3B82F6" />
+                    <View className="bg-primary-100 rounded-full p-2 mb-2">
+                        <Calendar size={18} color={colors.primary[500]} />
                     </View>
                     <View className="h-7 justify-center">
                         <Text className="text-base font-bold text-gray-900" numberOfLines={1}>
                             {nextReview ? getTimeUntilReview(nextReview.srs) : '-'}
                         </Text>
                     </View>
-                    <Text className="text-xs text-gray-500 mt-1">Next Review</Text>
+                    <Text className="text-xs text-gray-500 mt-1">Sonraki tekrar</Text>
                 </View>
 
                 {/* Progress */}
                 <View className="items-center flex-1">
                     <View className="bg-green-100 rounded-full p-2 mb-2">
-                        <Zap size={18} color="#22C55E" />
+                        <Zap size={18} color={colors.success} />
                     </View>
                     <View className="h-7 justify-center">
-                        <Text className="text-xl font-bold text-gray-900">{avgMastery}%</Text>
+                        <Text className="text-xl font-bold text-gray-900">%{avgMastery}</Text>
                     </View>
-                    <Text className="text-xs text-gray-500 mt-1">Mastery</Text>
+                    <Text className="text-xs text-gray-500 mt-1">Ustalık</Text>
                 </View>
             </View>
-        </View>
+        </Card>
     );
 }

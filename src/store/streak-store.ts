@@ -11,14 +11,22 @@ export interface StreakResult {
   newStreak: number;
 }
 
+export interface QuizScore {
+  correct: number;
+  total: number;
+  date: string; // "YYYY-MM-DD"
+}
+
 interface StreakStore {
   quizStreak: number;
   wordStreak: number;
   lastQuizDate: string | null;
   lastWordDate: string | null;
+  lastQuizScore: QuizScore | null;
   recordQuizCompletion: () => StreakResult;
   recordWordAddition: () => StreakResult;
   checkAndResetStreaks: () => void;
+  saveQuizScore: (correct: number, total: number) => void;
 }
 
 // Format a date as YYYY-MM-DD in the device's local timezone
@@ -49,6 +57,7 @@ export const useStreakStore = create<StreakStore>()(
       wordStreak: 0,
       lastQuizDate: null,
       lastWordDate: null,
+      lastQuizScore: null,
 
       recordQuizCompletion: (): StreakResult => {
         const today = getToday();
@@ -114,6 +123,10 @@ export const useStreakStore = create<StreakStore>()(
         if (Object.keys(updates).length > 0) {
           set(updates);
         }
+      },
+
+      saveQuizScore: (correct, total) => {
+        set({ lastQuizScore: { correct, total, date: getToday() } });
       },
     }),
     {

@@ -14,6 +14,7 @@ import Animated, {
     withTiming,
     ZoomIn
 } from 'react-native-reanimated';
+import { colors, shadows } from '@/constants/theme';
 
 interface StreakCelebrationModalProps {
     visible: boolean;
@@ -79,10 +80,10 @@ export function StreakCelebrationModal({
         ],
     }));
 
-    const title = streakType === 'quiz' ? 'Quiz Streak!' : 'Word Streak!';
+    const title = streakType === 'quiz' ? 'Quiz Serisi!' : 'Kelime Serisi!';
     const subtitle = streakType === 'quiz'
-        ? 'You completed a quiz today!'
-        : 'You added a word today!';
+        ? 'Bugün bir quiz tamamladın!'
+        : 'Bugün bir kelime ekledin!';
 
     return (
         <Modal
@@ -105,25 +106,25 @@ export function StreakCelebrationModal({
                         onPress={onClose}
                         className="absolute top-4 right-4 p-2"
                     >
-                        <X size={24} color="#9CA3AF" />
+                        <X size={24} color={colors.textSubtle} />
                     </Pressable>
 
                     {/* Fire icon */}
                     <Animated.View style={fireStyle} className="mb-4">
-                        <View className="bg-orange-200 rounded-full p-4">
-                            <Flame size={48} color="#EA580C" fill="#FB923C" />
+                        <View className="bg-accent-200 rounded-full p-4">
+                            <Flame size={48} color={colors.accent[600]} fill={colors.accent[400]} />
                         </View>
                     </Animated.View>
 
                     {/* Title */}
-                    <Text className="text-2xl font-bold text-orange-600 mb-2">
+                    <Text className="text-2xl font-bold text-accent-600 mb-2">
                         {title}
                     </Text>
 
                     {/* Streak count */}
                     <Animated.View style={numberStyle} className="my-4">
                         <View className="flex-row items-center">
-                            <Text className="text-6xl font-extrabold text-orange-500">
+                            <Text className="text-6xl font-extrabold text-accent-500">
                                 {streakCount}
                             </Text>
                             <Text className="text-4xl ml-2">🔥</Text>
@@ -131,27 +132,27 @@ export function StreakCelebrationModal({
                     </Animated.View>
 
                     {/* Subtitle */}
-                    <Text className="text-base text-orange-600/80 text-center mb-2">
+                    <Text className="text-base text-accent-600/80 text-center mb-2">
                         {subtitle}
                     </Text>
 
                     {/* Encouragement */}
-                    <Text className="text-sm text-orange-500/60 text-center">
+                    <Text className="text-sm text-accent-500/60 text-center">
                         {streakCount === 1
-                            ? "Great start! Keep it going!"
+                            ? "Harika bir başlangıç! Devam et!"
                             : streakCount < 7
-                                ? `${7 - streakCount} more days to a week streak!`
-                                : "Amazing dedication! 🎉"}
+                                ? `Bir haftalık seriye ${7 - streakCount} gün kaldı!`
+                                : "İnanılmaz bir kararlılık! 🎉"}
                     </Text>
 
                     {/* Continue button */}
                     <Pressable
                         onPress={onClose}
-                        className="mt-6 bg-orange-500 px-8 py-3 rounded-full"
-                        style={{ boxShadow: '0 4px 12px rgba(234, 88, 12, 0.4)' }}
+                        className="mt-6 bg-accent-500 px-8 py-3 rounded-full"
+                        style={{ boxShadow: shadows.accent }}
                     >
                         <Text className="text-white font-semibold text-base">
-                            Continue
+                            Devam
                         </Text>
                     </Pressable>
                 </Animated.View>

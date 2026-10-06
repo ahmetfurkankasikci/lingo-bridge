@@ -1,6 +1,7 @@
 import { WordCard } from '@/types';
 import React from 'react';
 import { Text, View } from 'react-native';
+import { colors } from '@/constants/theme';
 
 export type PracticeMode = 'tr-to-en' | 'en-to-tr' | 'gap-fill';
 
@@ -21,8 +22,8 @@ function renderHighlightedSentence(sentence: string) {
             return (
                 <Text
                     key={index}
-                    className="font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded-md"
-                    style={{ textDecorationLine: 'underline', textDecorationColor: '#F59E0B' }}
+                    className="font-bold text-accent-600 bg-accent-100 px-1.5 py-0.5 rounded-md"
+                    style={{ textDecorationLine: 'underline', textDecorationColor: colors.accent[500] }}
                 >
                     {part}
                 </Text>
@@ -42,7 +43,7 @@ function renderGapSentence(sentence: string) {
         if (index % 2 === 1) {
             // This is the word that should be replaced with gap
             return (
-                <Text key={index} className="text-indigo-500 font-semibold bg-indigo-50 px-2 py-0.5 rounded border border-dashed border-indigo-300">
+                <Text key={index} className="text-primary-500 font-semibold bg-primary-50 px-2 py-0.5 rounded border border-dashed border-primary-300">
                     _____
                 </Text>
             );
@@ -59,14 +60,14 @@ export function QuizQuestion({ questionItem }: QuizQuestionProps) {
             return (
                 <View className="items-center py-4">
                     <View className="bg-gray-100 rounded-full px-3 py-1 mb-3">
-                        <Text className="text-xs text-gray-500 uppercase tracking-wide">Turkish Meaning</Text>
+                        <Text className="text-xs text-gray-500 uppercase tracking-wide">Türkçe anlamı</Text>
                     </View>
                     <Text className="text-3xl font-bold text-gray-900 text-center mb-6">
                         {card.content.meaningTr}
                     </Text>
                     <View className="border-t border-gray-100 w-full pt-4">
                         <Text className="text-sm text-gray-400 text-center">
-                            Type the English word ↓
+                            İngilizce kelimeyi yaz ↓
                         </Text>
                     </View>
                 </View>
@@ -75,14 +76,14 @@ export function QuizQuestion({ questionItem }: QuizQuestionProps) {
             return (
                 <View className="items-center py-4">
                     <View className="bg-gray-100 rounded-full px-3 py-1 mb-3">
-                        <Text className="text-xs text-gray-500 uppercase tracking-wide">English Sentence</Text>
+                        <Text className="text-xs text-gray-500 uppercase tracking-wide">İngilizce cümle</Text>
                     </View>
                     <Text className="text-lg text-gray-900 text-center leading-relaxed mb-6">
                         {renderHighlightedSentence(card.content.exampleSentence)}
                     </Text>
                     <View className="border-t border-gray-100 w-full pt-4">
                         <Text className="text-sm text-gray-400 text-center">
-                            Type the Turkish meaning of the highlighted word ↓
+                            Vurgulu kelimenin Türkçe anlamını yaz ↓
                         </Text>
                     </View>
                 </View>
@@ -91,14 +92,14 @@ export function QuizQuestion({ questionItem }: QuizQuestionProps) {
             return (
                 <View className="items-center py-4">
                     <View className="bg-gray-100 rounded-full px-3 py-1 mb-3">
-                        <Text className="text-xs text-gray-500 uppercase tracking-wide">Fill in the Blank</Text>
+                        <Text className="text-xs text-gray-500 uppercase tracking-wide">Boşluk doldurma</Text>
                     </View>
                     <Text className="text-lg text-gray-900 text-center leading-relaxed mb-6">
                         {renderGapSentence(card.content.exampleSentence)}
                     </Text>
                     <View className="border-t border-gray-100 w-full pt-4">
                         <Text className="text-sm text-gray-400 text-center">
-                            Type the missing word ↓
+                            Eksik kelimeyi yaz ↓
                         </Text>
                     </View>
                 </View>

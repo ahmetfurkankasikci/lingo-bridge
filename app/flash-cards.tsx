@@ -21,6 +21,7 @@ import { StackedCard } from '@/components/stacked-card';
 import { WordCard } from '@/components/word-card';
 import { mapResultToQuality, orderWordsForReview } from '@/services/srs-service';
 import { useVocabStore } from '@/store/vocab-store';
+import { colors } from '@/constants/theme';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.3;
@@ -161,7 +162,7 @@ export default function FlashcardsScreen() {
             <>
                 <Stack.Screen options={{ gestureEnabled: false, animation: 'fade' }} />
                 <EmptyState
-                    description="Add words to your vocabulary to start using flashcards."
+                    description="Kart destesini kullanmak için önce birkaç kelime ekle."
                     onAction={handleClose}
                 />
             </>
@@ -181,7 +182,7 @@ export default function FlashcardsScreen() {
             {/* Progress Bar */}
             <View className="mx-4 h-1 bg-gray-200 rounded-full overflow-hidden">
                 <View
-                    className="h-full bg-indigo-500 rounded-full"
+                    className="h-full bg-primary-500 rounded-full"
                     style={{ width: `${progress}%` }}
                 />
             </View>
@@ -189,16 +190,16 @@ export default function FlashcardsScreen() {
             {/* Swipe Hint Labels */}
             <View className="flex-row justify-between px-8 mt-6">
                 <Animated.View style={skipIndicatorStyle} className="flex-row items-center">
-                    <View className="bg-orange-100 rounded-full p-2 mr-2">
-                        <X size={16} color="#F97316" />
+                    <View className="bg-accent-100 rounded-full p-2 mr-2">
+                        <X size={16} color={colors.accent[500]} />
                     </View>
-                    <Text className="text-orange-500 font-semibold">Skip</Text>
+                    <Text className="text-accent-500 font-semibold">Atla</Text>
                 </Animated.View>
 
                 <Animated.View style={learnedIndicatorStyle} className="flex-row items-center">
-                    <Text className="text-green-500 font-semibold">Learned</Text>
+                    <Text className="text-green-500 font-semibold">Öğrendim</Text>
                     <View className="bg-green-100 rounded-full p-2 ml-2">
-                        <Check size={16} color="#22C55E" />
+                        <Check size={16} color={colors.success} />
                     </View>
                 </Animated.View>
             </View>
@@ -233,8 +234,8 @@ export default function FlashcardsScreen() {
 
                 {/* Instruction */}
                 <View className="mt-8 items-center">
-                    <Text className="text-gray-400 text-sm mb-1">Tap card to flip</Text>
-                    <Text className="text-gray-300 text-xs">Swipe to continue</Text>
+                    <Text className="text-gray-400 text-sm mb-1">Çevirmek için karta dokun</Text>
+                    <Text className="text-gray-300 text-xs">Devam etmek için kaydır</Text>
                 </View>
             </View>
         </View>

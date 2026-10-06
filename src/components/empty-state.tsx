@@ -10,9 +10,9 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-    title = "No words yet",
-    description = "Add words to your vocabulary to start.",
-    actionLabel = "Go Back",
+    title = "Henüz kelime yok",
+    description = "Başlamak için kelime hazinene kelime ekle.",
+    actionLabel = "Geri Dön",
     onAction
 }: EmptyStateProps) {
     const insets = useSafeAreaInsets();
@@ -26,7 +26,7 @@ export function EmptyState({
             <Text className="text-gray-500 text-center mb-8">
                 {description}
             </Text>
-            <TouchableOpacity onPress={onAction} className="bg-indigo-500 py-3 px-6 rounded-xl">
+            <TouchableOpacity onPress={onAction} className="bg-primary-500 py-3 px-6 rounded-xl">
                 <Text className="text-white font-bold">{actionLabel}</Text>
             </TouchableOpacity>
         </View>

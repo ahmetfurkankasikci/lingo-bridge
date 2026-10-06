@@ -16,6 +16,7 @@ import Animated, {
 import { useRefreshContext } from '@/hooks/use-context-refresh';
 import { useVocabStore } from '@/store/vocab-store';
 import type { WordCard as WordCardType } from '@/types';
+import { colors } from '@/constants/theme';
 
 interface WordCardProps {
   card: WordCardType; // The vocabulary card data
@@ -31,7 +32,7 @@ function renderSentenceWithBoldMarkers(sentence: string) {
     // Odd indices are the words that were inside ** markers
     if (index % 2 === 1) {
       return (
-        <Text key={index} className="font-bold text-yellow-300">
+        <Text key={index} className="font-bold text-accent-300">
           {part}
         </Text>
       );
@@ -150,11 +151,11 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
             onPress={handleDelete}
             className="absolute top-3 right-3 p-2"
           >
-            <Trash2 size={18} color="#EF4444" />
+            <Trash2 size={18} color={colors.danger} />
           </TouchableOpacity>
 
           {/* Label */}
-          <Text className="text-sm text-gray-500 mb-2">Türkçe</Text>
+          <Text className="text-sm text-gray-500 mb-2">Türkçe anlamı</Text>
 
           {/* Turkish Meaning */}
           <Text className="text-3xl font-bold text-gray-900 text-center">
@@ -163,7 +164,7 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
 
           {/* Flip Hint */}
           <Text className="absolute bottom-3 text-xs text-gray-400">
-            Tap to see example
+            Örneği görmek için dokun
           </Text>
         </Animated.View>
 
@@ -173,7 +174,7 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
             backAnimatedStyle,
             {
               boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-              backgroundColor: '#3B82F6',
+              backgroundColor: colors.primary[500],
               borderWidth: 1,
               borderColor: 'rgba(255, 255, 255, 0.2)'
             },
@@ -186,12 +187,12 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
             <TouchableOpacity
               onPress={handleRefresh}
               disabled={refreshMutation.isPending}
-              className="p-2 bg-blue-600 rounded-full mr-2"
+              className="p-2 bg-primary-600 rounded-full mr-2"
             >
               {refreshMutation.isPending ? (
-                <ActivityIndicator size="small" color="#fff" />
+                <ActivityIndicator size="small" color={colors.white} />
               ) : (
-                <RefreshCw size={18} color="#fff" />
+                <RefreshCw size={18} color={colors.white} />
               )}
             </TouchableOpacity>
 
@@ -200,12 +201,12 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
               onPress={handleDelete}
               className="p-2 bg-red-500 rounded-full"
             >
-              <Trash2 size={18} color="#fff" />
+              <Trash2 size={18} color={colors.white} />
             </TouchableOpacity>
           </View>
 
           {/* Label */}
-          <Text className="text-xs text-blue-200 mb-3 text-center">Example Sentence</Text>
+          <Text className="text-xs text-primary-200 mb-3 text-center">Örnek cümle</Text>
 
           {/* Example Sentence with bolded word (parsed from ** markers) */}
           <Text className="text-lg text-white leading-relaxed text-center">
@@ -218,19 +219,19 @@ export function WordCard({ card, forcedFlipMode = null }: WordCardProps) {
               <Text className="text-xs text-white text-center" numberOfLines={2}>
                 {refreshMutation.error instanceof Error
                   ? refreshMutation.error.message
-                  : 'Failed to refresh sentence'}
+                  : 'Cümle yenilenemedi'}
               </Text>
             </View>
           ) : (
             /* Mastery Level Indicator */
             <View className="flex-row items-center justify-center mt-4">
-              <Text className="text-xs text-blue-200 mr-2">Mastery:</Text>
+              <Text className="text-xs text-primary-200 mr-2">Ustalık:</Text>
               <View className="flex-row">
                 {/* Render 5 dots for mastery level */}
                 {[0, 1, 2, 3, 4].map((level) => (
                   <View
                     key={level}
-                    className={`w-2 h-2 rounded-full mx-0.5 ${level < card.masteryLevel ? 'bg-yellow-400' : 'bg-blue-400/40'
+                    className={`w-2 h-2 rounded-full mx-0.5 ${level < card.masteryLevel ? 'bg-accent-400' : 'bg-primary-400/40'
                       }`}
                   />
                 ))}

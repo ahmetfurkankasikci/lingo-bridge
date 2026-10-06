@@ -17,6 +17,7 @@ import {
 
 import { useAddWord } from '@/hooks/use-add-word';
 import { StreakCelebrationModal } from './streak-celebration-modal';
+import { colors, shadows } from '@/constants/theme';
 
 interface AddWordModalProps {
   visible: boolean;
@@ -71,24 +72,24 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View
                 className="bg-white rounded-3xl p-6"
-                style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)' }}
+                style={{ boxShadow: shadows.raised }}
               >
                 {/* Header */}
                 <View className="flex-row items-center justify-between mb-6">
-                  <Text className="text-2xl font-bold text-gray-900">Add New Word</Text>
+                  <Text className="text-2xl font-bold text-gray-900">Yeni Kelime Ekle</Text>
                   <TouchableOpacity onPress={handleClose} className="p-2">
-                    <X size={24} color="#6B7280" />
+                    <X size={24} color={colors.textMuted} />
                   </TouchableOpacity>
                 </View>
 
                 {/* Input Field */}
                 <View className="mb-4">
-                  <Text className="text-sm font-medium text-gray-700 mb-2">English Word</Text>
+                  <Text className="text-sm font-medium text-gray-700 mb-2">İngilizce kelime</Text>
                   <TextInput
                     value={word}
                     onChangeText={setWord}
-                    placeholder="e.g., coffee, ticket, appointment"
-                    placeholderTextColor="#9CA3AF"
+                    placeholder="örn. coffee, ticket, appointment"
+                    placeholderTextColor={colors.textSubtle}
                     autoCapitalize="none"
                     autoCorrect={false}
                     autoFocus
@@ -105,7 +106,7 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
                     <Text className="text-sm text-red-600">
                       {addWordMutation.error instanceof Error
                         ? addWordMutation.error.message
-                        : 'Failed to generate word card'}
+                        : 'Kelime kartı oluşturulamadı'}
                     </Text>
                   </View>
                 )}
@@ -114,28 +115,28 @@ export function AddWordModal({ visible, onClose }: AddWordModalProps) {
                 <TouchableOpacity
                   onPress={handleAddWord}
                   disabled={addWordMutation.isPending || !word.trim()}
-                  className={`rounded-xl py-4 items-center ${addWordMutation.isPending || !word.trim() ? 'bg-blue-300' : 'bg-blue-500'
+                  className={`rounded-xl py-4 items-center ${addWordMutation.isPending || !word.trim() ? 'bg-primary-300' : 'bg-primary-500'
                     }`}
                   style={{
                     boxShadow:
                       addWordMutation.isPending || !word.trim()
                         ? 'none'
-                        : '0 2px 4px rgba(59, 130, 246, 0.3)',
+                        : shadows.primary,
                   }}
                 >
                   {addWordMutation.isPending ? (
                     <View className="flex-row items-center">
-                      <ActivityIndicator color="#fff" className="mr-2" />
-                      <Text className="text-white font-semibold text-base">Generating...</Text>
+                      <ActivityIndicator color={colors.white} className="mr-2" />
+                      <Text className="text-white font-semibold text-base">Oluşturuluyor...</Text>
                     </View>
                   ) : (
-                    <Text className="text-white font-semibold text-base">Add Word</Text>
+                    <Text className="text-white font-semibold text-base">Kelimeyi Ekle</Text>
                   )}
                 </TouchableOpacity>
 
                 {/* Helper Text */}
                 <Text className="text-xs text-gray-500 text-center mt-4">
-                  AI will generate Turkish meaning and a daily-life example sentence
+                  Yapay zekâ Türkçe anlamı ve günlük hayattan bir örnek cümle oluşturacak
                 </Text>
               </View>
             </TouchableWithoutFeedback>

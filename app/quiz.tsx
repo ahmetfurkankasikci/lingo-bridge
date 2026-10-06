@@ -33,6 +33,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors, shadows } from '@/constants/theme';
 
 interface QuizState {
   isStarted: boolean;
@@ -94,6 +95,7 @@ export default function QuizScreen() {
   const words = useVocabStore((state) => state.words);
   const recordReview = useVocabStore((state) => state.recordReview);
   const recordQuizCompletion = useStreakStore((state) => state.recordQuizCompletion);
+  const saveQuizScore = useStreakStore((state) => state.saveQuizScore);
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const inputRef = useRef<TextInput>(null);
@@ -227,6 +229,7 @@ export default function QuizScreen() {
   const nextQuestion = () => {
     if (quiz.currentIndex >= quiz.queue.length - 1) {
       const result = recordQuizCompletion();
+      saveQuizScore(quiz.correctCount, quiz.queue.length);
       if (result.increased) {
         setStreakModal({ visible: true, count: result.newStreak });
       }
@@ -244,9 +247,9 @@ export default function QuizScreen() {
 
   const getModeLabel = (mode: PracticeMode): string => {
     switch (mode) {
-      case 'tr-to-en': return 'Turkish → English';
-      case 'en-to-tr': return 'English → Turkish';
-      case 'gap-fill': return 'Fill in the Blank';
+      case 'tr-to-en': return 'Türkçe → İngilizce';
+      case 'en-to-tr': return 'İngilizce → Türkçe';
+      case 'gap-fill': return 'Boşluk doldurma';
     }
   };
 
@@ -265,7 +268,7 @@ export default function QuizScreen() {
       const base = currentQuestion.card.word;
       return (
         <Text className="text-lg font-bold text-gray-900">
-          {target} {normalizeAnswer(target) !== normalizeAnswer(base) ? `(or ${base})` : ''}
+          {target} {normalizeAnswer(target) !== normalizeAnswer(base) ? `(ya da ${base})` : ''}
         </Text>
       );
     }
@@ -275,7 +278,7 @@ export default function QuizScreen() {
   if (words.length === 0) {
     return (
       <EmptyState
-        description="Add some vocabulary words to start."
+        description="Quiz'e başlamak için önce birkaç kelime ekle."
         onAction={exitQuiz}
       />
     );
@@ -307,7 +310,7 @@ export default function QuizScreen() {
   if (!quiz.isStarted) {
     return (
       <View className="flex-1 bg-gray-50 items-center justify-center">
-        <RefreshCw className="animate-spin" size={32} color="#6366F1" />
+        <RefreshCw className="animate-spin" size={32} color={colors.primary[500]} />
       </View>
     );
   }
@@ -337,7 +340,7 @@ export default function QuizScreen() {
             {/* Progress Bar */}
             <View className="h-1.5 bg-gray-200 rounded-full overflow-hidden mb-3">
               <View
-                className="h-full bg-indigo-500 rounded-full"
+                className="h-full bg-primary-500 rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </View>
@@ -345,24 +348,24 @@ export default function QuizScreen() {
             {/* Running Score */}
             <View className="flex-row justify-center items-center mb-4">
               <View className="flex-row items-center mr-4">
-                <Check size={16} color="#22C55E" />
+                <Check size={16} color={colors.success} />
                 <Text className="text-green-600 font-medium ml-1">{quiz.correctCount}</Text>
               </View>
               <View className="flex-row items-center mr-4">
-                <X size={16} color="#EF4444" />
+                <X size={16} color={colors.danger} />
                 <Text className="text-red-500 font-medium ml-1">{quiz.wrongCount}</Text>
               </View>
               {quiz.skippedCount > 0 && (
                 <View className="flex-row items-center">
-                  <SkipForward size={16} color="#9CA3AF" />
+                  <SkipForward size={16} color={colors.textSubtle} />
                   <Text className="text-gray-400 font-medium ml-1">{quiz.skippedCount}</Text>
                 </View>
               )}
             </View>
 
             {/* Mode Badge */}
-            <View className="bg-indigo-100 rounded-full px-4 py-2 self-center mb-4">
-              <Text className="text-indigo-600 font-medium">{getModeLabel(quiz.queue[quiz.currentIndex].mode)}</Text>
+            <View className="bg-primary-100 rounded-full px-4 py-2 self-center mb-4">
+              <Text className="text-primary-600 font-medium">{getModeLabel(quiz.queue[quiz.currentIndex].mode)}</Text>
             </View>
 
             {/* Question Card with Animation */}
@@ -371,7 +374,7 @@ export default function QuizScreen() {
               entering={SlideInRight.duration(300)}
               exiting={SlideOutLeft.duration(200)}
               className="bg-white rounded-2xl p-6 mb-4"
-              style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}
+              style={{ boxShadow: shadows.card }}
             >
               <QuizQuestion questionItem={quiz.queue[quiz.currentIndex]} />
             </Animated.View>
@@ -382,8 +385,8 @@ export default function QuizScreen() {
                 ref={inputRef}
                 value={quiz.userAnswer}
                 onChangeText={(text) => setQuiz((prev) => ({ ...prev, userAnswer: text }))}
-                placeholder="Type your answer..."
-                placeholderTextColor="#9CA3AF"
+                placeholder="Cevabını yaz..."
+                placeholderTextColor={colors.textSubtle}
                 editable={!quiz.isAnswered}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -405,14 +408,14 @@ export default function QuizScreen() {
                 exiting={FadeOut.duration(100)}
                 className={`rounded-xl p-4 mb-4 flex-row items-center ${quiz.isCorrect ? 'bg-green-100' : 'bg-red-100'}`}
               >
-                {quiz.isCorrect ? <Check size={24} color="#22C55E" /> : <X size={24} color="#EF4444" />}
+                {quiz.isCorrect ? <Check size={24} color={colors.success} /> : <X size={24} color={colors.danger} />}
                 <View className="ml-3 flex-1">
                   <Text className={`font-bold ${quiz.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                    {quiz.isCorrect ? 'Correct! 🎉' : 'Incorrect'}
+                    {quiz.isCorrect ? 'Doğru! 🎉' : 'Yanlış'}
                   </Text>
                   {!quiz.isCorrect && (
                     <View className="mt-1">
-                      <Text className="text-sm text-red-600">Correct answer:</Text>
+                      <Text className="text-sm text-red-600">Doğru cevap:</Text>
                       {renderCorrectAnswer()}
                     </View>
                   )}
@@ -429,17 +432,17 @@ export default function QuizScreen() {
               <TouchableOpacity
                 onPress={quiz.isAnswered ? nextQuestion : checkAnswer}
                 disabled={!quiz.userAnswer.trim() && !quiz.isAnswered}
-                className={`rounded-xl py-4 flex-row items-center justify-center ${!quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-indigo-300' : 'bg-indigo-500'
+                className={`rounded-xl py-4 flex-row items-center justify-center ${!quiz.userAnswer.trim() && !quiz.isAnswered ? 'bg-primary-300' : 'bg-primary-500'
                   }`}
-                style={{ boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)' }}
+                style={{ boxShadow: shadows.primary }}
               >
                 {quiz.isAnswered ? (
                   <>
-                    <RefreshCw size={20} color="#fff" />
-                    <Text className="text-white font-semibold text-base ml-2">Next</Text>
+                    <RefreshCw size={20} color={colors.white} />
+                    <Text className="text-white font-semibold text-base ml-2">Sonraki</Text>
                   </>
                 ) : (
-                  <Text className="text-white font-semibold text-base">Check Answer</Text>
+                  <Text className="text-white font-semibold text-base">Kontrol et</Text>
                 )}
               </TouchableOpacity>
 
@@ -449,7 +452,7 @@ export default function QuizScreen() {
                   onPress={skipQuestion}
                   className="py-3 items-center"
                 >
-                  <Text className="text-gray-500 font-medium">Skip this question</Text>
+                  <Text className="text-gray-500 font-medium">Bu soruyu atla</Text>
                 </TouchableOpacity>
               )}
             </View>
